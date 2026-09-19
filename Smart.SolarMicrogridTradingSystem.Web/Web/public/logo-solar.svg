@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="sgSunGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd27a"/>
+      <stop offset="0.55" stop-color="#f2a93b"/>
+      <stop offset="1" stop-color="#d97e17"/>
+    </linearGradient>
+    <linearGradient id="sgPanelGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#cdeaf8"/>
+      <stop offset="0.45" stop-color="#5aa8d1"/>
+      <stop offset="1" stop-color="#276f97"/>
+    </linearGradient>
+    <clipPath id="sgPanelClip">
+      <path d="M48,152 L69,101 L153,101 L164,152 Z"/>
+    </clipPath>
+  </defs>
+
+  <circle cx="100" cy="106" r="74" fill="none" stroke="#2f6b45" stroke-width="15" stroke-linecap="round"
+    stroke-dasharray="330 465" transform="rotate(-8 100 106)"/>
+
+  <g stroke="url(#sgSunGrad)" stroke-width="5" stroke-linecap="round">
+    <line x1="126" y1="22" x2="126" y2="9"/>
+    <line x1="151" y1="29" x2="161" y2="19"/>
+    <line x1="169" y1="48" x2="182" y2="40"/>
+    <line x1="177" y1="73" x2="191" y2="71"/>
+    <line x1="101" y1="29" x2="93" y2="17"/>
+    <line x1="81" y1="44" x2="69" y2="33"/>
+  </g>
+  <path d="M96,86 A30,30 0 0 1 156,86 Z" fill="url(#sgSunGrad)"/>
+
+  <g clip-path="url(#sgPanelClip)">
+    <rect x="40" y="95" width="130" height="65" fill="url(#sgPanelGrad)"/>
+    <line x1="97" y1="101" x2="88" y2="152" stroke="#eaf6fc" stroke-width="2"/>
+    <line x1="124" y1="101" x2="126" y2="152" stroke="#eaf6fc" stroke-width="2"/>
+    <line x1="76" y1="127" x2="146" y2="127" stroke="#eaf6fc" stroke-width="2"/>
+    <polygon points="140,101 153,101 111,152 97,152" fill="#ffffff" opacity=".18"/>
+  </g>
+  <path d="M48,152 L69,101 L153,101 L164,152 Z" fill="none" stroke="#eaf6fc" stroke-width="2"/>
+</svg>

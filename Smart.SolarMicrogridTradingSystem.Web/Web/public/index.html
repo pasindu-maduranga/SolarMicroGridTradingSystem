@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/logo-solar.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="theme-color" content="#2f6b45" />
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=Roboto+Mono|Roboto+Slab|Roboto:300,400,500,700" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..800&display=swap">
+  <title>SolarGrid</title>
+</head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
+  <script>
+    fetch("/webConfiguration.json")
+      .then(response => {
+        return response.json();
+      })
+      .then(jsondata => {
+        var urls = {
+          apidomain: jsondata.apidomain,
+          reactDomain: jsondata.reactDomain,
+        };
+
+        sessionStorage.setItem('urls', JSON.stringify(urls));
+
+        if (jsondata.screenConfigurations !== null) {
+          sessionStorage.setItem('screenConfigurations', JSON.stringify(jsondata.screenConfigurations));
+        }
+
+      });
+  </script>
+</body>
+
+</html>

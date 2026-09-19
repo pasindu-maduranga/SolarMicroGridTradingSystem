@@ -1,0 +1,15 @@
+{
+  "short_name": "SolarGrid",
+  "name": "Smart Solar Microgrid Trading System",
+  "icons": [
+    {
+      "src": "logo-solar.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#2f6b45",
+  "background_color": "#ffffff"
+}
