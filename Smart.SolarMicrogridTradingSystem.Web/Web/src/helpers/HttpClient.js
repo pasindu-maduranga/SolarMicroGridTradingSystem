@@ -1,5 +1,4 @@
 import config from "react-global-configuration";
-import { AESEncryption, AESDecryption } from "./AesEncrypt";
 import dev from '../config/dev';
 import axios from 'axios';
 

@@ -6,11 +6,13 @@ A peer-to-peer solar energy trading platform built for the SE4040 (Enterprise Ap
 
 | Layer | Technology |
 |---|---|
-| Backend API | ASP.NET Core 6 Web API, thin-controller / fat-service pattern, JWT bearer auth |
+| Backend API | ASP.NET Core 8 Web API, thin-controller / fat-service pattern, JWT bearer auth |
 | Database | MongoDB (Atlas cloud cluster — no local MongoDB install needed) |
-| Web app (Backoffice / Grid Operator) | React 16 (Create React App 3.4.1) + Material-UI v4, Formik + Yup, react-router-dom v6-beta |
+| Web app (Backoffice / Grid Operator) | React 16 (Create React App, `react-scripts` 5) + Tailwind CSS + Headless UI, Formik + Yup, react-router-dom v6-beta |
 | Web hosting wrapper | ASP.NET Core `Smart.SolarMicrogridTradingSystem.Web` (hosts the built React app under IIS via `SpaServices`) |
 | Mobile app (Prosumer / Grid Operator) | Native Android — planned, calls the same API directly (no separate Mobile API project) |
+
+**Frontend styling migration in progress**: per the assignment's tech requirement, the UI is being migrated screen-by-screen from Material-UI v4 to Tailwind CSS + Headless UI (unstyled, accessible components you style entirely with Tailwind). The Login screen is fully migrated (no MUI dependency at all). The Dashboard and User Management screens (User/Role/RolePermission/ScreenManager) are still on Material-UI v4 pending migration — don't be surprised to see both `className="..."` Tailwind utility classes and MUI components/`makeStyles` in the codebase at the same time; that's expected during this transition, not a mistake.
 
 ## Prerequisites
 
@@ -18,9 +20,9 @@ Install these before working on the project:
 
 | Tool | Required version | Notes |
 |---|---|---|
-| .NET SDK | 6.0.x | Backend targets `net6.0` |
-| Node.js | 16.x LTS | Matches `react-scripts 3.4.1`. Node 17+ works but needs `NODE_OPTIONS=--openssl-legacy-provider` set before `npm start`/`npm run build` because of the OpenSSL 3 change |
-| npm | bundled with Node 16.x | |
+| .NET SDK | 8.0.x | Backend targets `net8.0` |
+| Node.js | 22.x LTS | Standardized team-wide via a committed `.node-version` file — if you use a version manager like `fnm` or `nvm`, it auto-switches to 22 inside this repo without touching your other projects |
+| npm | bundled with Node 22.x | |
 | Visual Studio 2022 (17+) or VS Code | latest | VS 2022 needed for `.sln`; VS Code + C# Dev Kit also works |
 | Git | latest | |
 | MongoDB Compass (optional) | latest | Handy for browsing the Atlas cluster's collections, not required |
@@ -100,12 +102,20 @@ cd Smart.SolarMicrogridTradingSystem.Web/Web
 npm install
 ```
 
+> A `postinstall` script automatically runs `patch-package`, which applies a small persisted fix to a broken nested dependency (`material-table`'s bundled `@material-ui/pickers` has a real upstream bug that fails to compile under Webpack 5). You don't need to do anything — it just works as part of `npm install`. The patch lives in `patches/` and is committed to git.
+
+Copy `.env.example` to `.env` (sets the dev server's port):
+
+```bash
+cp .env.example .env
+```
+
 Check `public/webConfiguration.json` points at your running API:
 
 ```json
 {
   "apidomain": "http://localhost:5050",
-  "reactDomain": "http://localhost:3000"
+  "reactDomain": "http://localhost:5020"
 }
 ```
 
@@ -115,7 +125,7 @@ Then start the dev server:
 npm start
 ```
 
-The app opens at `http://localhost:3000` and logs in against the API above.
+The app opens at `http://localhost:5020` (set via `.env`'s `PORT`) and logs in against the API above.
 
 > Alternative: running `dotnet run --project Smart.SolarMicrogridTradingSystem.Web` launches the ASP.NET Core wrapper, which auto-starts `npm start` internally and proxies to it — this is closer to how IIS will serve it in production, but slower to iterate with day-to-day.
 
@@ -128,6 +138,15 @@ cd ../..
 dotnet publish Smart.SolarMicrogridTradingSystem.Api -c Release
 dotnet publish Smart.SolarMicrogridTradingSystem.Web -c Release
 ```
+
+## Secrets
+
+| Secret | Where it lives | How it's handled |
+|---|---|---|
+| MongoDB Atlas connection string | `Smart.SolarMicrogridTradingSystem.Api/appsettings.json` | Committed with a placeholder value. Each developer runs `git update-index --skip-worktree` on this file (see step 2 above) and fills in the real value locally — it never gets committed. |
+| JWT signing secret | Same file, `JwtSettings:Secret` | Same pattern as above. |
+
+**Never commit real values for either of these.** If you ever run `git add -A` or `git commit -a`, double-check `git status` first — if `appsettings.json` shows up as a change, your skip-worktree bit isn't set on this machine; re-run the command in step 2.
 
 ## Git branching strategy
 

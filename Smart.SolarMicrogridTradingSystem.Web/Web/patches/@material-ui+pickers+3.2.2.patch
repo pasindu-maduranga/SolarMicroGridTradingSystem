@@ -1,0 +1,36 @@
+diff --git a/node_modules/@material-ui/pickers/esm/DatePicker/index.js b/node_modules/@material-ui/pickers/esm/DatePicker/index.js
+index 61b2cb4..fb58b96 100644
+--- a/node_modules/@material-ui/pickers/esm/DatePicker/index.js
++++ b/node_modules/@material-ui/pickers/esm/DatePicker/index.js
+@@ -1,2 +1 @@
+-import { DatePickerProps, KeyboardDatePickerProps } from './DatePicker';
+ export { KeyboardDatePicker, DatePicker } from './DatePicker';
+\ No newline at end of file
+diff --git a/node_modules/@material-ui/pickers/esm/DateTimePicker/index.js b/node_modules/@material-ui/pickers/esm/DateTimePicker/index.js
+index b830aee..357ce00 100644
+--- a/node_modules/@material-ui/pickers/esm/DateTimePicker/index.js
++++ b/node_modules/@material-ui/pickers/esm/DateTimePicker/index.js
+@@ -1,2 +1 @@
+-import { DateTimePickerProps, KeyboardDateTimePickerProps } from './DateTimePicker';
+ export { KeyboardDateTimePicker, DateTimePicker } from './DateTimePicker';
+\ No newline at end of file
+diff --git a/node_modules/@material-ui/pickers/esm/TimePicker/index.js b/node_modules/@material-ui/pickers/esm/TimePicker/index.js
+index fce05dc..86e8714 100644
+--- a/node_modules/@material-ui/pickers/esm/TimePicker/index.js
++++ b/node_modules/@material-ui/pickers/esm/TimePicker/index.js
+@@ -1,2 +1 @@
+-import { KeyboardTimePickerProps, TimePickerProps } from './TimePicker';
+ export { KeyboardTimePicker, TimePicker } from './TimePicker';
+\ No newline at end of file
+diff --git a/node_modules/@material-ui/pickers/esm/index.js b/node_modules/@material-ui/pickers/esm/index.js
+index 85ef1f7..2f1f257 100644
+--- a/node_modules/@material-ui/pickers/esm/index.js
++++ b/node_modules/@material-ui/pickers/esm/index.js
+@@ -1,7 +1,3 @@
+-import { MaterialUiPickersDate } from './typings/date';
+-import { KeyboardTimePickerProps } from './TimePicker';
+-import { DatePickerProps, KeyboardDatePickerProps } from './DatePicker';
+-import { DateTimePickerProps, KeyboardDateTimePickerProps } from './DateTimePicker';
+ export { DatePicker, KeyboardDatePicker } from './DatePicker';
+ export { TimePicker, KeyboardTimePicker } from './TimePicker';
+ export { DateTimePicker, KeyboardDateTimePicker } from './DateTimePicker';

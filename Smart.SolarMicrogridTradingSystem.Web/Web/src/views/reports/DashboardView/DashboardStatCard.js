@@ -1,28 +1,21 @@
 import React from 'react';
-import { Card, CardContent, Box, Typography } from '@material-ui/core';
 
-const DashboardStatCard = ({ icon, iconBg = '#E8F0E6', value, label, sublabel }) => {
+const DashboardStatCard = ({ icon, iconBg = '#E8F0E6', value, label, sublabel, live = false }) => {
   return (
-    <Card style={{ borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: 'none', height: '100%' }}>
-      <CardContent style={{ padding: 24 }}>
-        <Box mb={3}>
-          <Box style={{ backgroundColor: iconBg, borderRadius: '50%', padding: 12, display: 'inline-flex' }}>
-            <Typography style={{ fontSize: 20 }}>{icon}</Typography>
-          </Box>
-        </Box>
-        <Typography style={{ fontFamily: '"Inter", sans-serif', fontSize: '2rem', fontWeight: 700, color: '#111827', marginBottom: 4 }}>
-          {value}
-        </Typography>
-        <Typography style={{ fontFamily: '"Inter", sans-serif', fontSize: '0.85rem', color: '#4B5563', fontWeight: 500 }}>
-          {label}
-        </Typography>
-        {sublabel ? (
-          <Typography style={{ fontFamily: '"Inter", sans-serif', fontSize: '0.75rem', color: '#9CA3AF', marginTop: 4 }}>
-            {sublabel}
-          </Typography>
-        ) : null}
-      </CardContent>
-    </Card>
+    <div className="bg-white border border-[#E6DDC4] rounded-2xl p-[18px] flex flex-col gap-2.5 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_-12px_rgba(23,60,38,.22)]">
+      <div className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center" style={{ backgroundColor: iconBg }}>
+        {icon}
+      </div>
+      <div className={'font-sans text-[26px] font-bold ' + (value === '—' ? 'text-[#A9A290]' : 'text-[#22201A]')}>{value}</div>
+      <div className="text-[13px] font-semibold text-[#22201A]">{label}</div>
+      {live ? (
+        <div className="flex items-center gap-1.5 text-[11.5px] font-semibold text-[#2F6B45]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#2F6B45] inline-block" /> Live
+        </div>
+      ) : (
+        <div className="text-[11px] font-semibold text-[#726A58] bg-[#F4F1E8] px-2 py-1 rounded-full w-fit">{sublabel}</div>
+      )}
+    </div>
   );
 };
 
