@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 {
-    [Authorize]
+
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
