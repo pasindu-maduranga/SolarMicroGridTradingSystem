@@ -1,6 +1,6 @@
 {
     "apidomain": "http://localhost:5050",
-    "reactDomain": "http://localhost:3000",
+    "reactDomain": "http://localhost:8080",
     "screenConfigurations": [
         {
             "screenCode": "MANUALLEAFUPLOAD",

@@ -16,6 +16,11 @@ import PermissionListing from 'src/views/UserManagement/RolePermission/Pages/Lis
 import RoleAddEdit from 'src/views/UserManagement/Role/Pages/AddEdit';
 import RoleListing from 'src/views/UserManagement/Role/Pages/Listing';
 import ScreenManagerAddEdit from 'src/views/UserManagement/ScreenManager/Pages/AddEdit';
+import NodeListing from 'src/views/MicrogridNodeManagement/Pages/Listing';
+import NodeAddEdit from 'src/views/MicrogridNodeManagement/Pages/AddEdit';
+import GridOperatorMapping from 'src/views/MicrogridNodeManagement/Pages/GridOperatorMapping';
+import SlotsOverview from 'src/views/MicrogridNodeManagement/Pages/SlotsOverview';
+import SlotsDetail from 'src/views/MicrogridNodeManagement/Pages/SlotsDetail';
 import Unauthorized from './utils/unauthorized';
 
 const routes = (isLoggedIn) => [
@@ -53,6 +58,16 @@ const routes = (isLoggedIn) => [
         path: 'screenManager',
         children: [
           { path: 'listing', element: <ScreenManagerAddEdit /> }
+        ]
+      },
+      {
+        path: 'nodes',
+        children: [
+          { path: 'listing', element: <NodeListing /> },
+          { path: 'addEdit/:nodeID', element: <NodeAddEdit /> },
+          { path: 'gridOperatorMapping', element: <GridOperatorMapping /> },
+          { path: 'slots', element: <SlotsOverview /> },
+          { path: 'slots/:nodeID', element: <SlotsDetail /> }
         ]
       }
     ]

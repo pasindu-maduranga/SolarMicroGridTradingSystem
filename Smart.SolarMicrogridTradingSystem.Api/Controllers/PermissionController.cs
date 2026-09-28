@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Services.Interfaces;
@@ -6,7 +5,6 @@ using System.Threading.Tasks;
 
 namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 {
-
     [Route("api/[controller]")]
     [ApiController]
     public class PermissionController : ControllerBase
@@ -26,4 +24,3 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
         }
     }
 }
-

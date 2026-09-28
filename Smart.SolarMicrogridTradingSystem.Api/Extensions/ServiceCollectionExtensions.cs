@@ -18,6 +18,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Extensions
             services.AddScoped<IMainNavMenuService, MainNavMenuService>();
             services.AddScoped<IProsumerService, ProsumerService>();
             services.AddScoped<IReportingService, ReportingService>();
+            services.AddScoped<INodeService, NodeService>();
 
             return services;
         }

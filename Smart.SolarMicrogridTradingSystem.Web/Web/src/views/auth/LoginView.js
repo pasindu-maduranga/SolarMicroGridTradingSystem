@@ -14,17 +14,13 @@ const LoginView = () => {
 
   async function login(values) {
     setErrorMessage('');
-    try {
-      let result = await services.login(values);
-      if (result.statusCode === 'Error') {
-        setErrorMessage(result.message);
-        return;
-      }
-      sessionStorage.setItem('token', result.data);
-      navigate('/loader');
-    } catch (error) {
-      setErrorMessage(error.toString() || 'Login failed. Please check your credentials.');
+    let result = await services.login(values);
+    if (result.statusCode === 'Error') {
+      setErrorMessage(result.message);
+      return;
     }
+    sessionStorage.setItem('token', result.data);
+    navigate('/loader');
   }
 
   return (

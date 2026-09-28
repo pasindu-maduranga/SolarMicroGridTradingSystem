@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Requests;
@@ -8,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 {
-
     [Route("api/[controller]")]
     [ApiController]
     public class MenuController : ControllerBase
@@ -34,6 +32,13 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
             return await menuService.SaveMenuDetailsAsync(request);
         }
 
+        [HttpPut]
+        [Route("UpdateMenuDetails/{id}")]
+        public async Task<ApiResponse> UpdateMenuDetails(string id, [FromBody] MenuRequest request)
+        {
+            return await menuService.UpdateMenuDetailsAsync(id, request);
+        }
+
         [HttpGet]
         [Route("GetAllScreenDetails")]
         public async Task<ApiResponse> GetAllScreenDetails()
@@ -48,6 +53,13 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
             return await menuService.SaveScreenDetailsAsync(requests);
         }
 
+        [HttpPut]
+        [Route("UpdateScreenDetails/{id}")]
+        public async Task<ApiResponse> UpdateScreenDetails(string id, [FromBody] ScreenRequest request)
+        {
+            return await menuService.UpdateScreenDetailsAsync(id, request);
+        }
+
         [HttpDelete]
         [Route("{id}")]
         public async Task<ApiResponse> Delete(string id)
@@ -56,4 +68,3 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
         }
     }
 }
-

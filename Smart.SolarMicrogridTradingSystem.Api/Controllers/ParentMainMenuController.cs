@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Requests;
@@ -7,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 {
-
     [Route("api/[controller]")]
     [ApiController]
     public class ParentMainMenuController : ControllerBase
@@ -23,7 +21,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
         [Route("GetParentMenuByRole")]
         public async Task<ApiResponse> GetParentMenuByRole([FromQuery] string roleID)
         {
-            return await menuService.GetParentMenuByRoleAsync();
+            return await menuService.GetParentMenuByRoleAsync(roleID);
         }
 
         [HttpGet]
@@ -40,6 +38,13 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
             return await menuService.SaveParentMenuDetailsAsync(request);
         }
 
+        [HttpPut]
+        [Route("UpdateParentMenuDetails/{id}")]
+        public async Task<ApiResponse> UpdateParentMenuDetails(string id, [FromBody] ParentMenuRequest request)
+        {
+            return await menuService.UpdateParentMenuDetailsAsync(id, request);
+        }
+
         [HttpDelete]
         [Route("{id}")]
         public async Task<ApiResponse> Delete(string id)
@@ -48,4 +53,3 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
         }
     }
 }
-

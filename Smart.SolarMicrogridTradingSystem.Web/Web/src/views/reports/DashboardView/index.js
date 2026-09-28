@@ -3,6 +3,7 @@ import Page from 'src/components/Page';
 import GreetingHero from './GreetingHero';
 import DashboardStatCard from './DashboardStatCard';
 import userService from 'src/views/UserManagement/User/Services';
+import nodeService from 'src/views/MicrogridNodeManagement/Services';
 
 const icon = (path, color) => (
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -26,14 +27,21 @@ const EmptyPanel = ({ title, iconPath, message, hint }) => (
 
 const Dashboard = () => {
   const [totalStaff, setTotalStaff] = useState(null);
+  const [activeNodes, setActiveNodes] = useState(null);
 
   useEffect(() => {
     getTotalStaff();
+    getActiveNodes();
   }, []);
 
   async function getTotalStaff() {
     const users = await userService.getAllUsers();
     setTotalStaff(Array.isArray(users) ? users.length : 0);
+  }
+
+  async function getActiveNodes() {
+    const nodes = await nodeService.getAllNodes();
+    setActiveNodes(Array.isArray(nodes) ? nodes.filter((n) => n.isActive).length : 0);
   }
 
   return (
@@ -48,11 +56,11 @@ const Dashboard = () => {
           label="Total Staff"
         />
         <DashboardStatCard
+          live
           icon={icon(<path d="M13 2 4 14h6l-1 8 9-12h-6z" />, '#2A7EAE')}
           iconBg="#E0F2FE"
-          value="—"
+          value={activeNodes === null ? '—' : activeNodes}
           label="Active Microgrid Nodes"
-          sublabel="Coming soon"
         />
         <DashboardStatCard
           icon={icon(<><path d="M3 11l9-7 9 7" /><path d="M5 10v9h14v-9" /></>, '#B7791F')}
