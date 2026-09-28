@@ -13,11 +13,13 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
     public class MenuService : IMenuService
     {
         private readonly IMongoCollection<Menu> menus;
+        private readonly IMongoCollection<RolePermission> rolePermissions;
         private readonly IApiResponseFactory responseFactory;
 
         public MenuService(IMongoDatabase database, IApiResponseFactory responseFactory)
         {
             menus = database.GetCollection<Menu>("Menus");
+            rolePermissions = database.GetCollection<RolePermission>("RolePermissions");
             this.responseFactory = responseFactory;
         }
 
@@ -25,14 +27,24 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
 
         public async Task CreateAsync(Menu menu) => await menus.InsertOneAsync(menu);
 
-        public async Task<ApiResponse> GetParentMenuByRoleAsync()
+        public async Task<ApiResponse> GetParentMenuByRoleAsync(string roleId)
         {
             try
             {
                 var all = await GetAllAsync();
-                var result = all.Where(m => m.Level == MenuLevel.ParentMenu)
+                var allowedRolePerms = await rolePermissions.Find(p => p.RoleId == roleId && p.CanRead).ToListAsync();
+                var allowedMenuIds = allowedRolePerms.Select(p => p.MenuId).ToHashSet();
+
+                var visibleParentIds = all
+                    .Where(m => m.Level == MenuLevel.Menu && allowedMenuIds.Contains(m.Id))
+                    .Select(m => m.ParentId)
+                    .ToHashSet();
+
+                var result = all
+                    .Where(m => m.Level == MenuLevel.ParentMenu && visibleParentIds.Contains(m.Id))
                     .OrderBy(m => m.Order)
                     .Select(ToParentMenuSummary);
+
                 return responseFactory.Success(string.Empty, result);
             }
             catch (Exception ex)
@@ -71,6 +83,29 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
                 };
                 await CreateAsync(menu);
                 return responseFactory.Success("Parent menu saved successfully.");
+            }
+            catch (Exception ex)
+            {
+                return responseFactory.Error(ex.Message);
+            }
+        }
+
+        public async Task<ApiResponse> UpdateParentMenuDetailsAsync(string id, ParentMenuRequest request)
+        {
+            try
+            {
+                var menu = await menus.Find(x => x.Id == id).FirstOrDefaultAsync();
+                if (menu == null)
+                {
+                    return responseFactory.Error("Parent menu not found.");
+                }
+
+                menu.Name = request.ParentMenuName;
+                menu.Icon = request.IconTag;
+                menu.Order = request.MenuOrderNo;
+
+                await menus.ReplaceOneAsync(x => x.Id == id, menu);
+                return responseFactory.Success("Parent menu updated successfully.");
             }
             catch (Exception ex)
             {
@@ -122,6 +157,30 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        public async Task<ApiResponse> UpdateMenuDetailsAsync(string id, MenuRequest request)
+        {
+            try
+            {
+                var menu = await menus.Find(x => x.Id == id).FirstOrDefaultAsync();
+                if (menu == null)
+                {
+                    return responseFactory.Error("Menu not found.");
+                }
+
+                menu.Name = request.MenuName;
+                menu.Icon = request.IconTag;
+                menu.Order = request.MenuOrderNo;
+                menu.ParentId = request.ParentMenuId;
+
+                await menus.ReplaceOneAsync(x => x.Id == id, menu);
+                return responseFactory.Success("Menu updated successfully.");
+            }
+            catch (Exception ex)
+            {
+                return responseFactory.Error(ex.Message);
+            }
+        }
+
         public async Task<ApiResponse> GetAllScreenDetailsAsync()
         {
             try
@@ -166,6 +225,32 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
                     await CreateAsync(screen);
                 }
                 return responseFactory.Success("Screen(s) saved successfully.");
+            }
+            catch (Exception ex)
+            {
+                return responseFactory.Error(ex.Message);
+            }
+        }
+
+        public async Task<ApiResponse> UpdateScreenDetailsAsync(string id, ScreenRequest request)
+        {
+            try
+            {
+                var screen = await menus.Find(x => x.Id == id).FirstOrDefaultAsync();
+                if (screen == null)
+                {
+                    return responseFactory.Error("Screen not found.");
+                }
+
+                screen.Name = request.ScreenName;
+                screen.ScreenCode = request.ScreenCode.ToUpperInvariant();
+                screen.Icon = request.IconTag;
+                screen.Order = request.ScreenOrderNo;
+                screen.ParentId = request.MenuId;
+                screen.Route = request.RoutePath;
+
+                await menus.ReplaceOneAsync(x => x.Id == id, screen);
+                return responseFactory.Success("Screen updated successfully.");
             }
             catch (Exception ex)
             {

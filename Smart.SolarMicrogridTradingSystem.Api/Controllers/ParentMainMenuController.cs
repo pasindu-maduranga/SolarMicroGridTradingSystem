@@ -21,7 +21,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
         [Route("GetParentMenuByRole")]
         public async Task<ApiResponse> GetParentMenuByRole([FromQuery] string roleID)
         {
-            return await menuService.GetParentMenuByRoleAsync();
+            return await menuService.GetParentMenuByRoleAsync(roleID);
         }
 
         [HttpGet]
@@ -36,6 +36,13 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
         public async Task<ApiResponse> SaveParentMenuDetails([FromBody] ParentMenuRequest request)
         {
             return await menuService.SaveParentMenuDetailsAsync(request);
+        }
+
+        [HttpPut]
+        [Route("UpdateParentMenuDetails/{id}")]
+        public async Task<ApiResponse> UpdateParentMenuDetails(string id, [FromBody] ParentMenuRequest request)
+        {
+            return await menuService.UpdateParentMenuDetailsAsync(id, request);
         }
 
         [HttpDelete]
