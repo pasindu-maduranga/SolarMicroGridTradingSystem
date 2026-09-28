@@ -33,6 +33,7 @@ export function MenuConfig() {
   const alert = useAlert();
   const [parentMenuList, setParentMenuList] = useState([]);
   const [menuList, setMenuList] = useState([]);
+  const [editingId, setEditingId] = useState(null);
   const [menuFormData, setMenuFormData] = useState({
     parentMenuID: 0,
     menuName: "",
@@ -76,15 +77,44 @@ export function MenuConfig() {
 
   async function saveMenuDetails() {
     let requestModel = {
-      parentMenuID: menuFormData.parentMenuID,
+      parentMenuId: menuFormData.parentMenuID,
       menuName: menuFormData.menuName,
       iconTag: menuFormData.iconTagName.toLocaleLowerCase(),
       menuOrderNo: menuFormData.menuOrderNumber
     };
-    let response = await services.SaveMenuDetails(requestModel);
+    let response = editingId
+      ? await services.UpdateMenuDetails(editingId, requestModel)
+      : await services.SaveMenuDetails(requestModel);
     if (response.statusCode === "Success") {
       alert.success(response.message);
       setMenuFormData({ parentMenuID: 0, menuName: "", iconTagName: "", menuOrderNumber: 0 });
+      setEditingId(null);
+      trackPromise(getAllMenuDetails());
+    } else {
+      alert.error(response.message);
+    }
+  }
+
+  function handleEdit(rowData) {
+    setEditingId(rowData.menuID);
+    setMenuFormData({
+      parentMenuID: rowData.parentMenuID,
+      menuName: rowData.menuName,
+      iconTagName: rowData.iconTag,
+      menuOrderNumber: rowData.menuOrderNo
+    });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setMenuFormData({ parentMenuID: 0, menuName: "", iconTagName: "", menuOrderNumber: 0 });
+  }
+
+  async function handleDelete(rowData) {
+    if (!window.confirm(`Remove menu "${rowData.menuName}"?`)) return;
+    let response = await services.DeleteMenuNode(rowData.menuID);
+    if (response.statusCode === "Success") {
+      alert.success(response.message);
       trackPromise(getAllMenuDetails());
     } else {
       alert.error(response.message);
@@ -191,14 +221,23 @@ export function MenuConfig() {
                     </Grid>
                   </Grid>
                 </CardContent>
-                <Box display="flex" justifyContent="flex-end" p={2}>
+                <Box display="flex" justifyContent="flex-end" p={2} style={{ gap: 8 }}>
+                  {editingId && (
+                    <Button
+                      variant="outlined"
+                      onClick={cancelEdit}
+                      size='small'
+                    >
+                      Cancel
+                    </Button>
+                  )}
                   <Button
                     color="primary"
                     variant="outlined"
                     onClick={() => trackPromise(saveMenuDetails())}
                     size='small'
                   >
-                    Save Menu
+                    {editingId ? 'Update Menu' : 'Save Menu'}
                   </Button>
                 </Box>
 
@@ -216,8 +255,21 @@ export function MenuConfig() {
                       exportButton: false,
                       headerStyle: { textAlign: "left" },
                       cellStyle: { textAlign: "left" },
-                      columnResizable: false
+                      columnResizable: false,
+                      actionsColumnIndex: -1
                     }}
+                    actions={[
+                      {
+                        icon: 'edit',
+                        tooltip: 'Edit',
+                        onClick: (event, rowData) => handleEdit(rowData)
+                      },
+                      {
+                        icon: 'delete',
+                        tooltip: 'Delete',
+                        onClick: (event, rowData) => trackPromise(handleDelete(rowData))
+                      }
+                    ]}
                   />
                 </Box>
               </PerfectScrollbar>

@@ -83,7 +83,7 @@ export default function RoleAddEdit(props) {
     var isAuthorized = permissions.find(p => p.permissionCode == 'ADDEDITROLE');
 
     if (isAuthorized === undefined) {
-      navigate('/app/unauthorized');
+      navigate('/unauthorized');
     }
   }
 
