@@ -17,6 +17,8 @@ class TokenManager(context: Context) {
         private const val KEY_USERNAME = "username"
         private const val KEY_USER_NIC = "user_nic"
         private const val KEY_FULL_NAME = "full_name"
+        private const val KEY_ROLE_ID = "role_id"
+        private const val KEY_USER_ID = "user_id"
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
     }
 
@@ -25,6 +27,8 @@ class TokenManager(context: Context) {
         username: String,
         userRole: UserRole,
         roleName: String,
+        roleId: String = "",
+        userId: String = "",
         nic: String? = null,
         fullName: String? = null
     ) {
@@ -33,8 +37,10 @@ class TokenManager(context: Context) {
             putString(KEY_USERNAME, username)
             putString(KEY_USER_ROLE, userRole.name)
             putString(KEY_ROLE_NAME, roleName)
+            putString(KEY_ROLE_ID, roleId)
+            putString(KEY_USER_ID, userId)
             putString(KEY_USER_NIC, nic)
-            putString(KEY_FULL_NAME, fullName)
+            putString(KEY_FULL_NAME, fullName ?: "")
             putBoolean(KEY_IS_LOGGED_IN, true)
             apply()
         }
@@ -59,6 +65,10 @@ class TokenManager(context: Context) {
 
     fun getFullName(): String? = prefs.getString(KEY_FULL_NAME, null)
 
+    fun getRoleId(): String = prefs.getString(KEY_ROLE_ID, "") ?: ""
+
+    fun getUserId(): String = prefs.getString(KEY_USER_ID, "") ?: ""
+
     fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false) && !getToken().isNullOrEmpty()
 
     fun getSession(): UserSession? {
@@ -67,6 +77,9 @@ class TokenManager(context: Context) {
         val username = getUsername() ?: return null
         val role = getUserRole()
         val roleName = getRoleName()
+        val roleId = getRoleId()
+        val userId = getUserId()
+        val fullName = getFullName().orEmpty()
         val nic = getUserNic()
 
         return UserSession(
@@ -74,6 +87,9 @@ class TokenManager(context: Context) {
             username = username,
             userRole = role,
             roleName = roleName,
+            roleId = roleId,
+            userId = userId,
+            fullName = fullName,
             nic = nic
         )
     }

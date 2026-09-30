@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using Smart.SolarMicrogridTradingSystem.Api.Utils;
 
 namespace Smart.SolarMicrogridTradingSystem.Api.Models.Requests
 {
     public class CreateProsumerRequest
     {
         [Required]
+        [SriLankanNic]
         public string NIC { get; set; } = null!;
         
         [Required]
@@ -25,6 +27,12 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Models.Requests
         
         [Required]
         public string Address { get; set; } = null!;
+
+        [Range(-90, 90)]
+        public double Latitude { get; set; }
+
+        [Range(-180, 180)]
+        public double Longitude { get; set; }
 
         public bool IsActive { get; set; } = true;
         public string? CreatedBy { get; set; }
@@ -48,7 +56,25 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Models.Requests
         [Required]
         public string Address { get; set; } = null!;
 
+        [Range(-90, 90)]
+        public double? Latitude { get; set; }
+
+        [Range(-180, 180)]
+        public double? Longitude { get; set; }
+
         public bool IsActive { get; set; }
         public string? ModifiedBy { get; set; }
+    }
+
+    public class ApproveProsumerRequest
+    {
+        public string? ApprovedBy { get; set; }
+    }
+
+    public class RejectProsumerRequest
+    {
+        [Required]
+        public string Reason { get; set; } = null!;
+        public string? RejectedBy { get; set; }
     }
 }

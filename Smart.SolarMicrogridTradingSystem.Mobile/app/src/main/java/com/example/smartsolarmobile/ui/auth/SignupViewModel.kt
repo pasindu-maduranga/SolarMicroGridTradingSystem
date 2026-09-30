@@ -17,20 +17,23 @@ data class SignupUiState(
     val email: String = "",
     val phoneNumber: String = "",
     val address: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val password: String = "",
     val confirmPassword: String = "",
     val isLoading: Boolean = false,
+    val isLocating: Boolean = false,
     val errorMessage: String? = null,
     val successMessage: String? = null,
     val isSuccess: Boolean = false,
     val createdProsumer: ProsumerDto? = null,
-    // Field errors
     val nicError: String? = null,
     val firstNameError: String? = null,
     val lastNameError: String? = null,
     val emailError: String? = null,
     val phoneError: String? = null,
     val addressError: String? = null,
+    val locationError: String? = null,
     val passwordError: String? = null,
     val confirmPasswordError: String? = null
 )
@@ -48,6 +51,18 @@ class SignupViewModel(
     fun onEmailChanged(v: String) = _uiState.update { it.copy(email = v, emailError = null, errorMessage = null) }
     fun onPhoneChanged(v: String) = _uiState.update { it.copy(phoneNumber = v, phoneError = null, errorMessage = null) }
     fun onAddressChanged(v: String) = _uiState.update { it.copy(address = v, addressError = null, errorMessage = null) }
+
+    fun onLocationPicked(lat: Double, lng: Double) {
+        _uiState.update { it.copy(latitude = lat, longitude = lng, locationError = null, isLocating = false) }
+    }
+
+    fun setLocating(locating: Boolean) {
+        _uiState.update { it.copy(isLocating = locating) }
+    }
+
+    fun onLocationError(message: String) {
+        _uiState.update { it.copy(isLocating = false, errorMessage = message) }
+    }
     fun onPasswordChanged(v: String) = _uiState.update { it.copy(password = v, passwordError = null, errorMessage = null) }
     fun onConfirmPasswordChanged(v: String) = _uiState.update { it.copy(confirmPassword = v, confirmPasswordError = null, errorMessage = null) }
 
@@ -65,6 +80,7 @@ class SignupViewModel(
         var emailErr: String? = null
         var phoneErr: String? = null
         var addrErr: String? = null
+        var locationErr: String? = null
         var passErr: String? = null
         var confirmErr: String? = null
 
@@ -98,6 +114,11 @@ class SignupViewModel(
             hasError = true
         }
 
+        if (s.latitude == null || s.longitude == null) {
+            locationErr = "Use your current location or pick one on the map"
+            hasError = true
+        }
+
         if (s.password.length < 6) {
             passErr = "Password must be at least 6 characters"
             hasError = true
@@ -117,6 +138,7 @@ class SignupViewModel(
                     emailError = emailErr,
                     phoneError = phoneErr,
                     addressError = addrErr,
+                    locationError = locationErr,
                     passwordError = passErr,
                     confirmPasswordError = confirmErr
                 )
@@ -134,7 +156,9 @@ class SignupViewModel(
                 email = s.email,
                 password = s.password,
                 phoneNumber = s.phoneNumber,
-                address = s.address
+                address = s.address,
+                latitude = s.latitude ?: 0.0,
+                longitude = s.longitude ?: 0.0
             )
 
             result.fold(
@@ -144,7 +168,7 @@ class SignupViewModel(
                             isLoading = false,
                             isSuccess = true,
                             createdProsumer = prosumer,
-                            successMessage = "Registration successful! You can now log in with your NIC/Email."
+                            successMessage = "Registration submitted! Your account is pending approval — you'll be able to log in with your NIC once a Backoffice user approves it."
                         )
                     }
                 },

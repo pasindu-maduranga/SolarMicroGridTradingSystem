@@ -9,8 +9,8 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // Default API base URL for physical device (via adb reverse) / emulator pointing to local ASP.NET Core API
-    private var baseUrl: String = "http://127.0.0.1:5050/"
+
+    private var baseUrl: String = "http://172.188.240.78:5050/"
     private var tokenProvider: (() -> String?)? = null
 
     fun setBaseUrl(url: String) {

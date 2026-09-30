@@ -27,6 +27,13 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
         }
 
         [HttpGet]
+        [Route("pending")]
+        public async Task<ApiResponse> GetPending()
+        {
+            return await prosumerService.GetPendingProsumersAsync();
+        }
+
+        [HttpGet]
         [Route("{nic}")]
         public async Task<ApiResponse> GetByNic(string nic)
         {
@@ -43,13 +50,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
         [Route("{nic}")]
         public async Task<ApiResponse> Put(string nic, [FromBody] UpdateProsumerRequest request)
         {
-            // Assuming Backoffice users have the role name "Backoffice"
             bool isBackofficeUser = User.Claims.Any(c => c.Type == "roleName" && c.Value.Equals("Backoffice", System.StringComparison.OrdinalIgnoreCase));
-            
-            // Note: If authentication is not strictly enforced yet on this route, we will fallback to allowing updates
-            // (or we can just check if user is authenticated).
-            // For now, if there's no logged in user context, we will treat it as a false backoffice user.
-            
             return await prosumerService.UpdateProsumerAsync(nic, request, isBackofficeUser);
         }
 
@@ -58,6 +59,20 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
         public async Task<ApiResponse> Delete(string nic)
         {
             return await prosumerService.DeleteProsumerAsync(nic);
+        }
+
+        [HttpPut]
+        [Route("{nic}/approve")]
+        public async Task<ApiResponse> Approve(string nic, [FromBody] ApproveProsumerRequest request)
+        {
+            return await prosumerService.ApproveProsumerAsync(nic, request);
+        }
+
+        [HttpPut]
+        [Route("{nic}/reject")]
+        public async Task<ApiResponse> Reject(string nic, [FromBody] RejectProsumerRequest request)
+        {
+            return await prosumerService.RejectProsumerAsync(nic, request);
         }
     }
 }

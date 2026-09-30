@@ -73,7 +73,9 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
                     Longitude = request.Longitude,
                     Capacity = request.Capacity,
                     NumberOfSlots = request.NumberOfSlots,
-                    Slots = GenerateSlots(request.Capacity, request.NumberOfSlots),
+                    Slots = GenerateSlots(request.Capacity, request.NumberOfSlots, request.DefaultUnitPricePerKwh),
+                    OpeningTime = request.OpeningTime,
+                    ClosingTime = request.ClosingTime,
                     IsActive = request.IsActive,
                     CreatedBy = request.CreatedBy,
                     CreatedDate = DateTime.UtcNow
@@ -103,7 +105,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
 
                 if (request.NumberOfSlots != node.NumberOfSlots || request.Capacity != node.Capacity)
                 {
-                    node.Slots = GenerateSlots(request.Capacity, request.NumberOfSlots);
+                    node.Slots = GenerateSlots(request.Capacity, request.NumberOfSlots, request.DefaultUnitPricePerKwh);
                 }
 
                 node.Name = request.Name;
@@ -112,12 +114,45 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
                 node.Longitude = request.Longitude;
                 node.Capacity = request.Capacity;
                 node.NumberOfSlots = request.NumberOfSlots;
+                node.OpeningTime = request.OpeningTime;
+                node.ClosingTime = request.ClosingTime;
                 node.IsActive = request.IsActive;
                 node.ModifiedBy = request.ModifiedBy;
                 node.ModifiedDate = DateTime.UtcNow;
 
                 await nodes.ReplaceOneAsync(x => x.Id == id, node);
                 return responseFactory.Success("Node updated successfully.", await ToSummaryAsync(node));
+            }
+            catch (Exception ex)
+            {
+                return responseFactory.Error(ex.Message);
+            }
+        }
+
+        public async Task<ApiResponse> SetSlotPricesAsync(string nodeId, SetSlotPricesRequest request)
+        {
+            try
+            {
+                var node = await nodes.Find(x => x.Id == nodeId).FirstOrDefaultAsync();
+                if (node == null)
+                {
+                    return responseFactory.Error("Node not found.");
+                }
+
+                foreach (var entry in request.Prices)
+                {
+                    var slot = node.Slots.FirstOrDefault(s => s.SlotNumber == entry.SlotNumber);
+                    if (slot != null)
+                    {
+                        slot.UnitPricePerKwh = entry.UnitPricePerKwh;
+                    }
+                }
+
+                node.ModifiedBy = request.ModifiedBy;
+                node.ModifiedDate = DateTime.UtcNow;
+
+                await nodes.ReplaceOneAsync(x => x.Id == nodeId, node);
+                return responseFactory.Success("Slot pricing updated.", await ToSummaryAsync(node));
             }
             catch (Exception ex)
             {
@@ -243,7 +278,22 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             await users.ReplaceOneAsync(x => x.Id == operatorId, user);
         }
 
-        private static List<NodeSlot> GenerateSlots(double capacity, int numberOfSlots)
+        public async Task<Node?> GetByIdAsync(string id)
+        {
+            return await nodes.Find(x => x.Id == id).FirstOrDefaultAsync();
+        }
+
+        public async Task<bool> SetSlotAvailabilityAsync(string nodeId, int slotNumber, bool isAvailable)
+        {
+            var filter = Builders<Node>.Filter.Eq(n => n.Id, nodeId) &
+                         Builders<Node>.Filter.ElemMatch(n => n.Slots, s => s.SlotNumber == slotNumber);
+            var update = Builders<Node>.Update.Set("Slots.$.IsAvailable", isAvailable);
+
+            var result = await nodes.UpdateOneAsync(filter, update);
+            return result.MatchedCount > 0;
+        }
+
+        private static List<NodeSlot> GenerateSlots(double capacity, int numberOfSlots, double defaultUnitPricePerKwh)
         {
             if (numberOfSlots <= 0)
             {
@@ -254,7 +304,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             var slots = new List<NodeSlot>();
             for (var i = 1; i <= numberOfSlots; i++)
             {
-                slots.Add(new NodeSlot { SlotNumber = i, Capacity = slotCapacity, IsAvailable = true });
+                slots.Add(new NodeSlot { SlotNumber = i, Capacity = slotCapacity, IsAvailable = true, UnitPricePerKwh = defaultUnitPricePerKwh });
             }
             return slots;
         }
@@ -273,7 +323,9 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
                 numberOfSlots = node.NumberOfSlots,
                 availableSlotsCount = node.Slots.Count(s => s.IsAvailable),
                 availableCapacity = node.Slots.Where(s => s.IsAvailable).Sum(s => s.Capacity),
-                slots = node.Slots.Select(s => new { slotNumber = s.SlotNumber, capacity = s.Capacity, isAvailable = s.IsAvailable }),
+                slots = node.Slots.Select(s => new { slotNumber = s.SlotNumber, capacity = s.Capacity, isAvailable = s.IsAvailable, unitPricePerKwh = s.UnitPricePerKwh }),
+                openingTime = node.OpeningTime,
+                closingTime = node.ClosingTime,
                 isActive = node.IsActive,
                 assignedGridOperatorUserId = assignedOperator?.Id,
                 assignedGridOperatorName = assignedOperator != null ? $"{assignedOperator.FirstName} {assignedOperator.LastName}".Trim() : null,

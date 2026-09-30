@@ -21,6 +21,9 @@ import NodeAddEdit from 'src/views/MicrogridNodeManagement/Pages/AddEdit';
 import GridOperatorMapping from 'src/views/MicrogridNodeManagement/Pages/GridOperatorMapping';
 import SlotsOverview from 'src/views/MicrogridNodeManagement/Pages/SlotsOverview';
 import SlotsDetail from 'src/views/MicrogridNodeManagement/Pages/SlotsDetail';
+import ProsumerApprovals from 'src/views/ProsumerManagement/Pages/Approvals';
+import ProsumerListing from 'src/views/ProsumerManagement/Pages/Listing';
+import ReservationsListing from 'src/views/Reservations/Pages/Listing';
 import Unauthorized from './utils/unauthorized';
 
 const routes = (isLoggedIn) => [
@@ -68,6 +71,19 @@ const routes = (isLoggedIn) => [
           { path: 'gridOperatorMapping', element: <GridOperatorMapping /> },
           { path: 'slots', element: <SlotsOverview /> },
           { path: 'slots/:nodeID', element: <SlotsDetail /> }
+        ]
+      },
+      {
+        path: 'prosumers',
+        children: [
+          { path: 'profiles', element: <ProsumerListing /> },
+          { path: 'approvals', element: <ProsumerApprovals /> }
+        ]
+      },
+      {
+        path: 'reservations',
+        children: [
+          { path: 'listing', element: <ReservationsListing /> }
         ]
       }
     ]

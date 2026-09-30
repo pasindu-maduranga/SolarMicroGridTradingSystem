@@ -24,23 +24,48 @@ private val DarkColorScheme = darkColorScheme(
     error = ErrorRed
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = EcoGreenPrimary,
+// Grid Operators share the exact web-portal brand identity (forest green), since
+// they use both the web Backoffice app and this mobile app.
+private val GridOperatorColorScheme = lightColorScheme(
+    primary = SgPanel,
     onPrimary = Color.White,
-    secondary = SolarAmber,
-    onSecondary = Color.White,
-    tertiary = TechBlue,
-    background = SurfaceLight,
+    secondary = SgSun,
+    onSecondary = SgInk,
+    tertiary = SgSky,
+    background = Color.White,
     surface = Color.White,
-    onBackground = TextPrimary,
-    onSurface = TextPrimary,
-    error = ErrorRed
+    onBackground = SgInk,
+    onSurface = SgInk,
+    outline = SgLine,
+    error = SgError
 )
+
+// Prosumers get a distinct, warmer accent (gold/sun tones) built from the same
+// palette family, so the app still feels like one product but reads as "consumer".
+private val ProsumerColorScheme = lightColorScheme(
+    primary = SgSun,
+    onPrimary = SgInk,
+    secondary = SgPanel,
+    onSecondary = Color.White,
+    tertiary = SgSky,
+    background = Color.White,
+    surface = Color.White,
+    onBackground = SgInk,
+    onSurface = SgInk,
+    outline = SgLine,
+    error = SgError
+)
+
+// Default (pre-login) scheme — the shared brand entry point.
+private val LightColorScheme = GridOperatorColorScheme
+
+enum class AppThemeVariant { DEFAULT, GRID_OPERATOR, PROSUMER }
 
 @Composable
 fun SmartSolarMobileTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false, // Preserve brand identity
+    variant: AppThemeVariant = AppThemeVariant.DEFAULT,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -49,7 +74,8 @@ fun SmartSolarMobileTheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
         darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        variant == AppThemeVariant.PROSUMER -> ProsumerColorScheme
+        else -> GridOperatorColorScheme
     }
 
     MaterialTheme(

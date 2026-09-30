@@ -46,8 +46,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             {
                 var totalProsumers = await prosumers.CountDocumentsAsync(_ => true);
                 var activeProsumers = await prosumers.CountDocumentsAsync(p => p.IsActive);
-                
-                // When bookings/nodes are implemented, we can aggregate data here.
+
                 return responseFactory.Success(string.Empty, new
                 {
                     TotalProsumers = totalProsumers,

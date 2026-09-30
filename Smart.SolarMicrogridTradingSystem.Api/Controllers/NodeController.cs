@@ -11,10 +11,17 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
     public class NodeController : ControllerBase
     {
         private readonly INodeService nodeService;
+        private readonly IApiResponseFactory responseFactory;
+        // Depended on here (controller level only, never from NodeService itself) purely to check
+        // for active reservations before a deactivation - avoids a circular service dependency
+        // since ReservationService already depends on INodeService.
+        private readonly IReservationService reservationService;
 
-        public NodeController(INodeService nodeService)
+        public NodeController(INodeService nodeService, IReservationService reservationService, IApiResponseFactory responseFactory)
         {
             this.nodeService = nodeService;
+            this.reservationService = reservationService;
+            this.responseFactory = responseFactory;
         }
 
         [HttpGet]
@@ -47,7 +54,19 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
         [Route("{id}")]
         public async Task<ApiResponse> Put(string id, [FromBody] NodeRequest request)
         {
+            if (!request.IsActive && await reservationService.HasActiveReservationsForNodeAsync(id))
+            {
+                return responseFactory.Error("This node cannot be deactivated while it has active energy reservations.");
+            }
+
             return await nodeService.UpdateNodeAsync(id, request);
+        }
+
+        [HttpPut]
+        [Route("{id}/slot-prices")]
+        public async Task<ApiResponse> SetSlotPrices(string id, [FromBody] SetSlotPricesRequest request)
+        {
+            return await nodeService.SetSlotPricesAsync(id, request);
         }
 
         [HttpPut]

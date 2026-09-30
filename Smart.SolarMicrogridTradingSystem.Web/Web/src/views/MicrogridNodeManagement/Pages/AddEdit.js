@@ -30,6 +30,9 @@ export default function NodeAddEdit() {
     longitude: null,
     capacity: '',
     numberOfSlots: '',
+    defaultUnitPricePerKwh: '',
+    openingTime: '',
+    closingTime: '',
     isActive: true
   });
   const [mapOpen, setMapOpen] = useState(false);
@@ -59,6 +62,9 @@ export default function NodeAddEdit() {
       longitude: data.longitude,
       capacity: data.capacity,
       numberOfSlots: data.numberOfSlots || '',
+      defaultUnitPricePerKwh: '',
+      openingTime: data.openingTime || '',
+      closingTime: data.closingTime || '',
       isActive: data.isActive
     });
     setLoaded(true);
@@ -102,7 +108,8 @@ export default function NodeAddEdit() {
           name: Yup.string().max(255).required('Node name is required'),
           address: Yup.string().max(500).required('Address is required'),
           capacity: Yup.number().min(0, 'Capacity must be 0 or higher').required('Capacity is required'),
-          numberOfSlots: Yup.number().integer('Must be a whole number').min(1, 'Must be at least 1').required('Number of slots is required')
+          numberOfSlots: Yup.number().integer('Must be a whole number').min(1, 'Must be at least 1').required('Number of slots is required'),
+          defaultUnitPricePerKwh: Yup.number().min(0, 'Price must be 0 or higher').nullable()
         })}
         onSubmit={saveNode}
       >
@@ -164,6 +171,50 @@ export default function NodeAddEdit() {
                             {values.numberOfSlots} slots × <strong className="text-[#22201A]">{(values.capacity / values.numberOfSlots).toFixed(1)} kW</strong> each
                           </div>
                         )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wide text-[#726A58] mb-1.5">
+                        {isUpdate ? 'Price for New Slots (Rs/kWh)' : 'Price per Slot (Rs/kWh) *'}
+                      </label>
+                      <input
+                        name="defaultUnitPricePerKwh"
+                        type="number"
+                        step="0.01"
+                        value={values.defaultUnitPricePerKwh}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className="w-full border border-[#E6DDC4] rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#2F6B45]"
+                        placeholder="e.g. 45.00"
+                      />
+                      {touched.defaultUnitPricePerKwh && errors.defaultUnitPricePerKwh && <div className="text-xs text-[#C0392B] mt-1">{errors.defaultUnitPricePerKwh}</div>}
+                      {isUpdate && <div className="text-xs text-[#726A58] mt-1">Only applies if capacity/slot count changes. Edit existing slots' prices from the Slots screen.</div>}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wide text-[#726A58] mb-1.5">Opens At</label>
+                      <input
+                        name="openingTime"
+                        type="time"
+                        value={values.openingTime}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className="w-full border border-[#E6DDC4] rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#2F6B45]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wide text-[#726A58] mb-1.5">Closes At</label>
+                      <input
+                        name="closingTime"
+                        type="time"
+                        value={values.closingTime}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className="w-full border border-[#E6DDC4] rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#2F6B45]"
+                      />
                     </div>
                   </div>
 

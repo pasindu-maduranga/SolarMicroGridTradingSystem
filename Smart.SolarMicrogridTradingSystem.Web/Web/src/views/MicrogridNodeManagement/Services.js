@@ -8,7 +8,8 @@ export default {
   updateNode,
   deleteNode,
   getAvailableGridOperators,
-  assignGridOperator
+  assignGridOperator,
+  setSlotPrices
 };
 
 async function getAllNodes() {
@@ -35,6 +36,9 @@ async function saveNode(node) {
     longitude: node.longitude,
     capacity: node.capacity,
     numberOfSlots: node.numberOfSlots,
+    defaultUnitPricePerKwh: node.defaultUnitPricePerKwh || 0,
+    openingTime: node.openingTime || null,
+    closingTime: node.closingTime || null,
     isActive: node.isActive,
     createdBy: tokenDecoder.getUserIDFromToken()
   };
@@ -51,11 +55,22 @@ async function updateNode(node) {
     longitude: node.longitude,
     capacity: node.capacity,
     numberOfSlots: node.numberOfSlots,
+    defaultUnitPricePerKwh: node.defaultUnitPricePerKwh || 0,
+    openingTime: node.openingTime || null,
+    closingTime: node.closingTime || null,
     isActive: node.isActive,
     modifiedBy: tokenDecoder.getUserIDFromToken()
   };
 
   const response = await CommonPut('/api/Node/' + node.nodeID, null, updateModel);
+  return response;
+}
+
+async function setSlotPrices(nodeID, prices) {
+  const response = await CommonPut('/api/Node/' + nodeID + '/slot-prices', null, {
+    prices,
+    modifiedBy: tokenDecoder.getUserIDFromToken()
+  });
   return response;
 }
 

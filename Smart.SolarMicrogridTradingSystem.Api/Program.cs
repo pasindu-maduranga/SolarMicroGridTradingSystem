@@ -64,5 +64,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 await Smart.SolarMicrogridTradingSystem.Api.Utils.DataSeeder.SeedAsync(app.Services);
+await Smart.SolarMicrogridTradingSystem.Api.Utils.DataSeeder.SeedProsumerAndReservationFeaturesAsync(app.Services);
 
 app.Run();

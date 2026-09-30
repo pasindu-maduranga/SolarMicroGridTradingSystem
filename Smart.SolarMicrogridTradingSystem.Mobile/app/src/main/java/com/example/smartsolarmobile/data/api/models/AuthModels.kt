@@ -3,13 +3,17 @@ package com.example.smartsolarmobile.data.api.models
 import com.google.gson.annotations.SerializedName
 
 /**
- * Common API Response envelope returned by the ASP.NET Core API
+ * Common API Response envelope returned by the ASP.NET Core API.
+ * The backend's ApiResponseFactory serializes this as { statusCode: "Success"|"Error", message, data } —
+ * there is no boolean "status" field, so callers must check statusCode == "Success".
  */
 data class ApiResponse<T>(
-    @SerializedName("status") val status: Boolean,
+    @SerializedName("statusCode") val statusCode: String,
     @SerializedName("message") val message: String?,
     @SerializedName("data") val data: T?
-)
+) {
+    val isSuccess: Boolean get() = statusCode == "Success"
+}
 
 /**
  * Login request payload for /api/auth/login
@@ -30,8 +34,22 @@ data class ProsumerRegistrationRequest(
     @SerializedName("password") val password: String,
     @SerializedName("phoneNumber") val phoneNumber: String,
     @SerializedName("address") val address: String,
+    @SerializedName("latitude") val latitude: Double,
+    @SerializedName("longitude") val longitude: Double,
     @SerializedName("isActive") val isActive: Boolean = true,
     @SerializedName("createdBy") val createdBy: String = "MobileApp"
+)
+
+data class UpdateProsumerRequest(
+    @SerializedName("firstName") val firstName: String,
+    @SerializedName("lastName") val lastName: String,
+    @SerializedName("email") val email: String,
+    @SerializedName("phoneNumber") val phoneNumber: String,
+    @SerializedName("address") val address: String,
+    @SerializedName("latitude") val latitude: Double? = null,
+    @SerializedName("longitude") val longitude: Double? = null,
+    @SerializedName("isActive") val isActive: Boolean,
+    @SerializedName("modifiedBy") val modifiedBy: String? = null
 )
 
 /**
@@ -44,6 +62,8 @@ data class ProsumerDto(
     @SerializedName("email") val email: String,
     @SerializedName("phoneNumber") val phoneNumber: String,
     @SerializedName("address") val address: String,
+    @SerializedName("latitude") val latitude: Double? = null,
+    @SerializedName("longitude") val longitude: Double? = null,
     @SerializedName("isActive") val isActive: Boolean,
     @SerializedName("createdDate") val createdDate: String?
 )
@@ -56,6 +76,9 @@ data class UserSession(
     val username: String,
     val userRole: UserRole,
     val roleName: String,
+    val roleId: String = "",
+    val userId: String = "",
+    val fullName: String = "",
     val nic: String? = null
 )
 

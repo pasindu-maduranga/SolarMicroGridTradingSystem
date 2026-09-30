@@ -1,10 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const SlotBattery = ({ slotNumber, capacity, isAvailable }) => {
+const SlotBattery = ({ slotNumber, capacity, isAvailable, unitPricePerKwh, canEditPrice, onSavePrice }) => {
   const fillPercent = isAvailable ? 0 : 100;
   const fillColor = isAvailable ? '#2F6B45' : '#E8A53A';
   const label = isAvailable ? 'Available' : 'Reserved';
   const labelColor = isAvailable ? 'text-[#2F6B45]' : 'text-[#B7791F]';
+
+  const [editing, setEditing] = useState(false);
+  const [draftPrice, setDraftPrice] = useState(unitPricePerKwh ?? 0);
+
+  const startEdit = () => {
+    setDraftPrice(unitPricePerKwh ?? 0);
+    setEditing(true);
+  };
+
+  const save = () => {
+    setEditing(false);
+    if (onSavePrice) onSavePrice(Number(draftPrice) || 0);
+  };
 
   return (
     <div className="flex flex-col items-center gap-2 bg-white border border-[#E6DDC4] rounded-2xl p-4">
@@ -23,6 +36,31 @@ const SlotBattery = ({ slotNumber, capacity, isAvailable }) => {
 
       <div className={`text-xs font-bold ${labelColor}`}>{label}</div>
       <div className="text-[13px] font-semibold text-[#22201A]">{capacity.toFixed(1)} kW</div>
+
+      {unitPricePerKwh != null && (
+        editing ? (
+          <div className="flex items-center gap-1 mt-1">
+            <input
+              type="number"
+              step="0.01"
+              autoFocus
+              value={draftPrice}
+              onChange={(e) => setDraftPrice(e.target.value)}
+              className="w-16 border border-[#E6DDC4] rounded px-1.5 py-1 text-xs outline-none focus:border-[#2F6B45]"
+            />
+            <button type="button" onClick={save} className="text-[#2F6B45] text-xs font-bold px-1">✓</button>
+            <button type="button" onClick={() => setEditing(false)} className="text-[#A9A290] text-xs px-1">✕</button>
+          </div>
+        ) : (
+          <div
+            className={`text-[11.5px] font-semibold text-[#726A58] mt-0.5 ${canEditPrice ? 'cursor-pointer hover:text-[#2F6B45] hover:underline' : ''}`}
+            onClick={canEditPrice ? startEdit : undefined}
+            title={canEditPrice ? 'Click to edit price' : undefined}
+          >
+            Rs. {unitPricePerKwh.toFixed(2)}/kWh{canEditPrice ? ' ✎' : ''}
+          </div>
+        )
+      )}
     </div>
   );
 };
