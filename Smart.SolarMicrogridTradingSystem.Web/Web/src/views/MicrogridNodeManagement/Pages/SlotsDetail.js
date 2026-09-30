@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { trackPromise } from 'react-promise-tracker';
+import { useAlert } from 'react-alert';
 import Page from 'src/components/Page';
 import services from '../Services';
 import permissionService from 'src/utils/permissionAuth';
@@ -12,9 +13,12 @@ const screenCode = 'NODESLOTS';
 
 export default function SlotsDetail() {
   const navigate = useNavigate();
+  const alert = useAlert();
   const { nodeID } = useParams();
   const decrypted = atob(nodeID.toString());
   const [node, setNode] = useState(null);
+  const [canEditPrice, setCanEditPrice] = useState(false);
+  const [bulkPrice, setBulkPrice] = useState('');
 
   const loadNode = useCallback(async () => {
     const data = await services.getNodeDetailsByID(decrypted);
@@ -34,6 +38,25 @@ export default function SlotsDetail() {
     if (isAuthorized === undefined) {
       navigate('/unauthorized');
     }
+    setCanEditPrice(permissions.find((p) => p.permissionCode == 'ADDEDIT' + screenCode) !== undefined);
+  }
+
+  async function saveSlotPrice(slotNumber, unitPricePerKwh) {
+    const response = await services.setSlotPrices(decrypted, [{ slotNumber, unitPricePerKwh }]);
+    alert.success(response.message);
+    trackPromise(loadNode());
+  }
+
+  async function applyBulkPrice() {
+    if (bulkPrice === '' || Number(bulkPrice) < 0 || !node?.slots?.length) {
+      alert.error('Enter a valid price to apply to all slots.');
+      return;
+    }
+    const prices = node.slots.map((s) => ({ slotNumber: s.slotNumber, unitPricePerKwh: Number(bulkPrice) }));
+    const response = await services.setSlotPrices(decrypted, prices);
+    alert.success(response.message);
+    setBulkPrice('');
+    trackPromise(loadNode());
   }
 
   const secondsLeft = useAutoRefresh(loadNode, 10);
@@ -74,12 +97,42 @@ export default function SlotsDetail() {
         </div>
       </div>
 
+      {canEditPrice && (
+        <div className="bg-white border border-[#E6DDC4] rounded-2xl p-5 mb-5 flex items-center gap-3 flex-wrap">
+          <label className="text-xs font-bold uppercase tracking-wide text-[#726A58]">Set price for all slots (Rs/kWh)</label>
+          <input
+            type="number"
+            step="0.01"
+            value={bulkPrice}
+            onChange={(e) => setBulkPrice(e.target.value)}
+            placeholder="e.g. 45.00"
+            className="w-32 border border-[#E6DDC4] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#2F6B45]"
+          />
+          <button
+            type="button"
+            onClick={applyBulkPrice}
+            className="px-4 py-2 rounded-lg bg-[#2F6B45] text-white text-xs font-semibold hover:bg-[#265939] transition-colors"
+          >
+            Apply to All Slots
+          </button>
+          <span className="text-xs text-[#A9A290]">Or click a single slot's price below to edit it individually.</span>
+        </div>
+      )}
+
       {(!node.slots || node.slots.length === 0) ? (
         <div className="bg-white border border-[#E6DDC4] rounded-2xl p-10 text-center text-[#A9A290]">This node has no slots configured.</div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {node.slots.map((slot) => (
-            <SlotBattery key={slot.slotNumber} slotNumber={slot.slotNumber} capacity={slot.capacity} isAvailable={slot.isAvailable} />
+            <SlotBattery
+              key={slot.slotNumber}
+              slotNumber={slot.slotNumber}
+              capacity={slot.capacity}
+              isAvailable={slot.isAvailable}
+              unitPricePerKwh={slot.unitPricePerKwh}
+              canEditPrice={canEditPrice}
+              onSavePrice={(price) => saveSlotPrice(slot.slotNumber, price)}
+            />
           ))}
         </div>
       )}

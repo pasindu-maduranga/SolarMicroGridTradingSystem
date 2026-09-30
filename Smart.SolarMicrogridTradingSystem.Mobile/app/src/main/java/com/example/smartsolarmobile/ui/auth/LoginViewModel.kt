@@ -2,7 +2,6 @@ package com.example.smartsolarmobile.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.smartsolarmobile.data.api.models.UserRole
 import com.example.smartsolarmobile.data.api.models.UserSession
 import com.example.smartsolarmobile.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +13,6 @@ import kotlinx.coroutines.launch
 data class LoginUiState(
     val username: String = "",
     val password: String = "",
-    val selectedRole: UserRole = UserRole.GRID_OPERATOR,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val usernameError: String? = null,
@@ -38,10 +36,6 @@ class LoginViewModel(
         _uiState.update { it.copy(password = value, passwordError = null, errorMessage = null) }
     }
 
-    fun onRoleSelected(role: UserRole) {
-        _uiState.update { it.copy(selectedRole = role, errorMessage = null) }
-    }
-
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }
@@ -56,7 +50,7 @@ class LoginViewModel(
         var passwordError: String? = null
 
         if (username.isBlank()) {
-            usernameError = if (currentState.selectedRole == UserRole.PROSUMER) "NIC or Username is required" else "Username is required"
+            usernameError = "Username or NIC is required"
             hasError = true
         }
 
@@ -80,8 +74,7 @@ class LoginViewModel(
 
             val result = repository.login(
                 userName = username,
-                password = password,
-                expectedRole = currentState.selectedRole
+                password = password
             )
 
             result.fold(

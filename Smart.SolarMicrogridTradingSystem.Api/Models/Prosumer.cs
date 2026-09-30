@@ -4,6 +4,13 @@ using System;
 
 namespace Smart.SolarMicrogridTradingSystem.Api.Models
 {
+    public static class ProsumerApprovalStatus
+    {
+        public const string Pending = "Pending";
+        public const string Approved = "Approved";
+        public const string Rejected = "Rejected";
+    }
+
     public class Prosumer
     {
         /// <summary>
@@ -23,8 +30,24 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Models
         
         public string PhoneNumber { get; set; } = null!;
         public string Address { get; set; } = null!;
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        /// <summary>
+        /// Pending until a Backoffice/Grid Operator user approves the registration; login is blocked until Approved.
+        /// </summary>
+        public string ApprovalStatus { get; set; } = ProsumerApprovalStatus.Pending;
+        public string? ApprovedBy { get; set; }
+        public DateTime? ApprovedDate { get; set; }
+        public string? RejectionReason { get; set; }
+
+        /// <summary>
+        /// Points at the seeded "Prosumer" Role, so mobile menu access can be granted/revoked
+        /// through the same Role Permission screen used for web roles.
+        /// </summary>
+        public string? RoleId { get; set; }
 
         public string? CreatedBy { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;

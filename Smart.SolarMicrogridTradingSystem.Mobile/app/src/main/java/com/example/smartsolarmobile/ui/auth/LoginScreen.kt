@@ -1,5 +1,6 @@
 package com.example.smartsolarmobile.ui.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -18,24 +20,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SolarPower
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -46,19 +41,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.smartsolarmobile.data.api.RetrofitClient
-import com.example.smartsolarmobile.data.api.models.UserRole
+import com.example.smartsolarmobile.R
 import com.example.smartsolarmobile.data.api.models.UserSession
+import com.example.smartsolarmobile.ui.components.CurvedBottomShape
 import com.example.smartsolarmobile.ui.components.CustomTextField
 import com.example.smartsolarmobile.ui.components.PrimaryButton
-import com.example.smartsolarmobile.ui.components.UserTypeSelector
 
 @Composable
 fun LoginScreen(
@@ -70,8 +70,6 @@ fun LoginScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var isPasswordVisible by remember { mutableStateOf(false) }
-    var showServerConfigDialog by remember { mutableStateOf(false) }
-    var customServerUrl by remember { mutableStateOf("http://127.0.0.1:5050/") }
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { error ->
@@ -94,64 +92,70 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Server Config Top Icon
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+            // Hero — a distinct curved section, but in a light tone close to the illustration's
+            // own white background so it blends instead of showing as a boxed-in graphic.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(elevation = 3.dp, shape = CurvedBottomShape())
+                    .clip(CurvedBottomShape())
+                    .background(Color(0xFFF4F1E8))
             ) {
-                IconButton(onClick = { showServerConfigDialog = true }) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Server Settings",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                // Full-bleed watermark — sharp, just low-opacity so it reads as a background
+                // texture behind the text rather than a separate boxed photo.
+                Image(
+                    painter = painterResource(id = R.drawable.illustration_login_hero),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    alpha = 1f,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(top = 28.dp, start = 24.dp, end = 24.dp, bottom = 22.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "SOLARGRID",
+                        fontSize = 17.sp,
+                        letterSpacing = 2.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "For Prosumers & Grid Operators",
+                        fontSize = 12.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Branding Header
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.SolarPower,
-                    contentDescription = "Solar Microgrid Logo",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(48.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "Solar Trading Mobile",
-                fontSize = 24.sp,
+                text = "Welcome back",
+                fontSize = 26.sp,
+                fontFamily = FontFamily.Serif,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = "Identity & Access Control Center",
-                fontSize = 14.sp,
+                text = "Sign in with your Username or NIC to continue",
+                fontSize = 13.5.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp)
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 6.dp, bottom = 22.dp, start = 24.dp, end = 24.dp)
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Main Login Card
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -160,40 +164,23 @@ fun LoginScreen(
                     modifier = Modifier.padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "Select Login Identity",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.align(Alignment.Start)
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    UserTypeSelector(
-                        selectedRole = uiState.selectedRole,
-                        onRoleSelected = { viewModel.onRoleSelected(it) }
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Username / NIC Input
-                    val isProsumer = uiState.selectedRole == UserRole.PROSUMER
+                    // A single identifier field: Grid Operators sign in with their
+                    // username, Prosumers with their NIC — no role picker needed,
+                    // the server resolves which account type it is.
                     CustomTextField(
                         value = uiState.username,
                         onValueChange = { viewModel.onUsernameChanged(it) },
-                        label = if (isProsumer) "NIC or Email" else "Username",
-                        leadingIcon = if (isProsumer) Icons.Default.Badge else Icons.Default.Person,
+                        label = "Username or NIC",
+                        leadingIcon = Icons.Default.Person,
                         errorMessage = uiState.usernameError,
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = if (isProsumer) KeyboardType.Text else KeyboardType.Text,
+                            keyboardType = KeyboardType.Text,
                             imeAction = ImeAction.Next
                         )
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Password Input
                     CustomTextField(
                         value = uiState.password,
                         onValueChange = { viewModel.onPasswordChanged(it) },
@@ -211,37 +198,42 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Login Action Button
                     PrimaryButton(
-                        text = if (isProsumer) "Sign In as Prosumer" else "Sign In as Grid Operator",
+                        text = "Sign In",
                         onClick = { viewModel.login() },
                         isLoading = uiState.isLoading
                     )
-
-                    if (isProsumer) {
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "Don't have a Prosumer account? ",
-                                fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = "Sign Up",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.clickable { onNavigateToSignup() }
-                            )
-                        }
-                    }
                 }
             }
+
+            Spacer(modifier = Modifier.height(22.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                // The whole row (not just the bold words) is clickable, with a generous minimum
+                // touch height - some phones' default text size made the old text-only hit area
+                // too small to tap reliably.
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavigateToSignup() }
+                    .heightIn(min = 48.dp)
+                    .padding(vertical = 12.dp)
+            ) {
+                Text(
+                    text = "New Prosumer? ",
+                    fontSize = 13.5.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Create an account",
+                    fontSize = 13.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
         SnackbarHost(
@@ -249,44 +241,6 @@ fun LoginScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(16.dp)
-        )
-    }
-
-    // Server API URL Configuration Dialog
-    if (showServerConfigDialog) {
-        AlertDialog(
-            onDismissRequest = { showServerConfigDialog = false },
-            title = { Text("API Endpoint Configuration") },
-            text = {
-                Column {
-                    Text(
-                        "Specify the Web API URL (e.g. http://10.0.2.2:5050/ for emulator or http://192.168.x.x:5050/ for physical device):",
-                        fontSize = 13.sp
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = customServerUrl,
-                        onValueChange = { customServerUrl = it },
-                        label = { Text("API Base URL") },
-                        singleLine = true
-                    )
-                }
-            },
-            confirmButton = {
-                PrimaryButton(
-                    text = "Save",
-                    onClick = {
-                        RetrofitClient.setBaseUrl(customServerUrl)
-                        showServerConfigDialog = false
-                    },
-                    modifier = Modifier.height(44.dp)
-                )
-            },
-            dismissButton = {
-                TextButton(onClick = { showServerConfigDialog = false }) {
-                    Text("Cancel")
-                }
-            }
         )
     }
 }

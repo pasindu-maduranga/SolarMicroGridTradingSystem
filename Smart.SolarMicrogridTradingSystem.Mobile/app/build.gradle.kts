@@ -1,8 +1,15 @@
+import java.util.Properties
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)
+}
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
 }
 
 android {
@@ -14,6 +21,10 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+
+        // Kept out of the manifest source and out of git (local.properties is gitignored) -
+        // each dev/CI machine supplies its own MAPS_API_KEY there.
+        manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY", "")
     }
 
     buildTypes {
@@ -85,6 +96,12 @@ dependencies {
   implementation(libs.androidx.navigation3.ui)
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+
+  // Maps (Google Maps SDK - free tier, API key in local.properties) & QR generate/scan & runtime permissions
+  implementation(libs.play.services.maps)
+  implementation(libs.maps.compose)
+  implementation(libs.zxing.embedded)
+  implementation(libs.accompanist.permissions)
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {

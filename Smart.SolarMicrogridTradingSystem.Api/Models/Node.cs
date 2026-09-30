@@ -10,6 +10,13 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Models
         public int SlotNumber { get; set; }
         public double Capacity { get; set; }
         public bool IsAvailable { get; set; } = true;
+
+        /// <summary>
+        /// Price paid to the Prosumer per kWh actually delivered through this slot (Rs/kWh).
+        /// Captured on the Reservation at booking time so later price changes don't affect
+        /// reservations already in flight.
+        /// </summary>
+        public double UnitPricePerKwh { get; set; }
     }
 
     public class Node
@@ -24,6 +31,13 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Models
         public double Capacity { get; set; }
         public int NumberOfSlots { get; set; }
         public List<NodeSlot> Slots { get; set; } = new();
+
+        /// <summary>
+        /// Daily operating hours, e.g. "08:00" / "20:00" - editable independently of slots/capacity.
+        /// </summary>
+        public string? OpeningTime { get; set; }
+        public string? ClosingTime { get; set; }
+
         public bool IsActive { get; set; } = true;
         public string? CreatedBy { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;

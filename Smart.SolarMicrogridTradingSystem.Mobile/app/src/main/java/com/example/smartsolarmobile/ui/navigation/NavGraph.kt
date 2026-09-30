@@ -9,14 +9,31 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smartsolarmobile.data.api.models.UserRole
 import com.example.smartsolarmobile.data.api.models.UserSession
 import com.example.smartsolarmobile.data.repository.AuthRepository
+import com.example.smartsolarmobile.theme.AppThemeVariant
+import com.example.smartsolarmobile.theme.SmartSolarMobileTheme
 import com.example.smartsolarmobile.ui.auth.LoginScreen
 import com.example.smartsolarmobile.ui.auth.LoginViewModel
 import com.example.smartsolarmobile.ui.auth.LoginViewModelFactory
 import com.example.smartsolarmobile.ui.auth.SignupScreen
 import com.example.smartsolarmobile.ui.auth.SignupViewModel
 import com.example.smartsolarmobile.ui.auth.SignupViewModelFactory
+import com.example.smartsolarmobile.data.repository.ReservationRepository
 import com.example.smartsolarmobile.ui.home.GridOperatorHomeScreen
 import com.example.smartsolarmobile.ui.home.ProsumerHomeScreen
+import com.example.smartsolarmobile.ui.reservation.MyNodeSlotsScreen
+import com.example.smartsolarmobile.ui.reservation.MyNodeSlotsViewModelFactory
+import com.example.smartsolarmobile.ui.reservation.MyReservationsScreen
+import com.example.smartsolarmobile.ui.reservation.MyReservationsViewModelFactory
+import com.example.smartsolarmobile.ui.reservation.ReserveSlotScreen
+import com.example.smartsolarmobile.ui.reservation.ReserveSlotViewModelFactory
+import com.example.smartsolarmobile.ui.reservation.VerifyReservationScreen
+import com.example.smartsolarmobile.ui.reservation.VerifyReservationViewModelFactory
+import com.example.smartsolarmobile.ui.reservation.EarningsScreen
+import com.example.smartsolarmobile.ui.reservation.EarningsViewModelFactory
+import com.example.smartsolarmobile.ui.reservation.OperatorBookingsScreen
+import com.example.smartsolarmobile.ui.reservation.OperatorBookingsViewModelFactory
+import com.example.smartsolarmobile.ui.reservation.TransactionHistoryScreen
+import com.example.smartsolarmobile.ui.reservation.TransactionHistoryViewModelFactory
 
 @Composable
 fun AppNavGraph(
@@ -39,6 +56,35 @@ fun AppNavGraph(
 
     var activeSession by remember { mutableStateOf(authRepository.getSavedSession()) }
 
+    // Grid Operators (and Backoffice) keep the shared web-portal green brand;
+    // Prosumers get the warmer gold accent once they're signed in.
+    val themeVariant = when (activeSession?.userRole) {
+        UserRole.PROSUMER -> AppThemeVariant.PROSUMER
+        UserRole.GRID_OPERATOR, UserRole.BACKOFFICE -> AppThemeVariant.GRID_OPERATOR
+        null -> AppThemeVariant.DEFAULT
+    }
+
+    SmartSolarMobileTheme(variant = themeVariant) {
+        NavGraphContent(
+            currentScreen = currentScreen,
+            activeSession = activeSession,
+            authRepository = authRepository,
+            onScreenChange = { currentScreen = it },
+            onSessionChange = { activeSession = it }
+        )
+    }
+}
+
+@Composable
+private fun NavGraphContent(
+    currentScreen: Screen,
+    activeSession: UserSession?,
+    authRepository: AuthRepository,
+    onScreenChange: (Screen) -> Unit,
+    onSessionChange: (UserSession?) -> Unit
+) {
+    val reservationRepository = remember { ReservationRepository() }
+
     when (currentScreen) {
         Screen.Login -> {
             val loginViewModel: LoginViewModel = viewModel(
@@ -47,15 +93,17 @@ fun AppNavGraph(
             LoginScreen(
                 viewModel = loginViewModel,
                 onLoginSuccess = { session ->
-                    activeSession = session
-                    currentScreen = if (session.userRole == UserRole.GRID_OPERATOR || session.userRole == UserRole.BACKOFFICE) {
-                        Screen.GridOperatorHome
-                    } else {
-                        Screen.ProsumerHome
-                    }
+                    onSessionChange(session)
+                    onScreenChange(
+                        if (session.userRole == UserRole.GRID_OPERATOR || session.userRole == UserRole.BACKOFFICE) {
+                            Screen.GridOperatorHome
+                        } else {
+                            Screen.ProsumerHome
+                        }
+                    )
                 },
                 onNavigateToSignup = {
-                    currentScreen = Screen.Signup
+                    onScreenChange(Screen.Signup)
                 }
             )
         }
@@ -67,10 +115,10 @@ fun AppNavGraph(
             SignupScreen(
                 viewModel = signupViewModel,
                 onNavigateBackToLogin = {
-                    currentScreen = Screen.Login
+                    onScreenChange(Screen.Login)
                 },
                 onSignupSuccess = {
-                    currentScreen = Screen.Login
+                    onScreenChange(Screen.Login)
                 }
             )
         }
@@ -81,12 +129,16 @@ fun AppNavGraph(
                     session = session,
                     onLogout = {
                         authRepository.logout()
-                        activeSession = null
-                        currentScreen = Screen.Login
-                    }
+                        onSessionChange(null)
+                        onScreenChange(Screen.Login)
+                    },
+                    onNavigateToVerify = { onScreenChange(Screen.VerifyReservation) },
+                    onNavigateToMyNodeSlots = { onScreenChange(Screen.MyNodeSlots) },
+                    onNavigateToBookings = { onScreenChange(Screen.OperatorBookings) },
+                    onNavigateToTransactionHistory = { onScreenChange(Screen.TransactionHistory) }
                 )
             } ?: run {
-                currentScreen = Screen.Login
+                onScreenChange(Screen.Login)
             }
         }
 
@@ -94,15 +146,87 @@ fun AppNavGraph(
             activeSession?.let { session ->
                 ProsumerHomeScreen(
                     session = session,
+                    authRepository = authRepository,
                     onLogout = {
                         authRepository.logout()
-                        activeSession = null
-                        currentScreen = Screen.Login
-                    }
+                        onSessionChange(null)
+                        onScreenChange(Screen.Login)
+                    },
+                    onNavigateToReserve = { onScreenChange(Screen.ReserveSlot) },
+                    onNavigateToMyReservations = { onScreenChange(Screen.MyReservations) },
+                    onNavigateToEarnings = { onScreenChange(Screen.Earnings) }
                 )
             } ?: run {
-                currentScreen = Screen.Login
+                onScreenChange(Screen.Login)
             }
+        }
+
+        Screen.ReserveSlot -> {
+            val nic = activeSession?.nic
+            if (nic == null) {
+                onScreenChange(Screen.Login)
+            } else {
+                val vm = viewModel<com.example.smartsolarmobile.ui.reservation.ReserveSlotViewModel>(
+                    factory = ReserveSlotViewModelFactory(reservationRepository, authRepository, nic)
+                )
+                ReserveSlotScreen(viewModel = vm, onBack = { onScreenChange(Screen.ProsumerHome) })
+            }
+        }
+
+        Screen.MyReservations -> {
+            val nic = activeSession?.nic
+            if (nic == null) {
+                onScreenChange(Screen.Login)
+            } else {
+                val vm = viewModel<com.example.smartsolarmobile.ui.reservation.MyReservationsViewModel>(
+                    factory = MyReservationsViewModelFactory(reservationRepository, nic)
+                )
+                MyReservationsScreen(viewModel = vm, onBack = { onScreenChange(Screen.ProsumerHome) })
+            }
+        }
+
+        Screen.Earnings -> {
+            val nic = activeSession?.nic
+            if (nic == null) {
+                onScreenChange(Screen.Login)
+            } else {
+                val vm = viewModel<com.example.smartsolarmobile.ui.reservation.EarningsViewModel>(
+                    factory = EarningsViewModelFactory(reservationRepository, nic)
+                )
+                EarningsScreen(viewModel = vm, onBack = { onScreenChange(Screen.ProsumerHome) })
+            }
+        }
+
+        Screen.VerifyReservation -> {
+            val verifiedBy = activeSession?.username ?: "Grid Operator"
+            val vm = viewModel<com.example.smartsolarmobile.ui.reservation.VerifyReservationViewModel>(
+                factory = VerifyReservationViewModelFactory(reservationRepository, verifiedBy)
+            )
+            VerifyReservationScreen(viewModel = vm, onBack = { onScreenChange(Screen.GridOperatorHome) })
+        }
+
+        Screen.MyNodeSlots -> {
+            val userId = activeSession?.userId ?: ""
+            val vm = viewModel<com.example.smartsolarmobile.ui.reservation.MyNodeSlotsViewModel>(
+                factory = MyNodeSlotsViewModelFactory(reservationRepository, userId)
+            )
+            MyNodeSlotsScreen(viewModel = vm, onBack = { onScreenChange(Screen.GridOperatorHome) })
+        }
+
+        Screen.OperatorBookings -> {
+            val userId = activeSession?.userId ?: ""
+            val vm = viewModel<com.example.smartsolarmobile.ui.reservation.OperatorBookingsViewModel>(
+                factory = OperatorBookingsViewModelFactory(reservationRepository, userId)
+            )
+            OperatorBookingsScreen(viewModel = vm, onBack = { onScreenChange(Screen.GridOperatorHome) })
+        }
+
+        Screen.TransactionHistory -> {
+            val userId = activeSession?.userId ?: ""
+            val vm = viewModel<com.example.smartsolarmobile.ui.reservation.TransactionHistoryViewModel>(
+                factory = TransactionHistoryViewModelFactory(reservationRepository, userId)
+            )
+            TransactionHistoryScreen(viewModel = vm, onBack = { onScreenChange(Screen.GridOperatorHome) })
         }
     }
 }
