@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.smartsolarmobile">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -23,12 +24,23 @@
             android:value="${MAPS_API_KEY}" />
         <activity
             android:name=".MainActivity"
+            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- The QR scanner (from zxing-android-embedded) defaults to rotating with the device
+             sensor and only locks to whatever orientation it happened to start in - that's the
+             "camera rotates mid-scan" behavior Grid Operators were seeing. Forcing it to a fixed
+             portrait orientation here removes rotation as a possibility entirely, rather than
+             relying on the library's runtime lock-to-current-orientation option. -->
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="portrait"
+            tools:replace="android:screenOrientation" />
     </application>
 
 </manifest>
