@@ -29,22 +29,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/** A horizontal battery-style slot indicator — mirrors the web app's Node Slots viewer
- *  (empty/green = available, full/amber = reserved) so both apps read the same way. */
+/** A horizontal battery-style slot indicator — mirrors the web app's Node Slots viewer. The fill
+ *  reflects how much of today's shared capacity has actually been used (verified deliveries), not
+ *  a plain available/reserved switch - a slot fills up gradually as multiple Prosumers deliver
+ *  into it, rather than jumping straight to full on a single booking. */
 @Composable
 fun BatterySlot(
     slotNumber: Int,
     capacityKw: Double,
     isAvailable: Boolean,
+    remainingCapacityKw: Double = if (isAvailable) capacityKw else 0.0,
     modifier: Modifier = Modifier
 ) {
-    val fillColor = if (isAvailable) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+    val isFull = remainingCapacityKw <= 0.0
+    val usedFraction = if (capacityKw > 0) ((capacityKw - remainingCapacityKw) / capacityKw).toFloat() else 0f
+    val fillColor = if (isFull) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
     val fillFraction by animateFloatAsState(
-        targetValue = if (isAvailable) 0f else 1f,
+        targetValue = usedFraction.coerceIn(0f, 1f),
         animationSpec = tween(durationMillis = 500),
         label = "batteryFill"
     )
-    val label = if (isAvailable) "Available" else "Reserved"
+    val label = if (isFull) "Full today" else "${"%.1f".format(remainingCapacityKw)} kW left"
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -99,7 +104,7 @@ fun BatterySlot(
                 textAlign = TextAlign.Center
             )
             Text(
-                text = "${"%.1f".format(capacityKw)} kW",
+                text = "${"%.1f".format(remainingCapacityKw)} / ${"%.1f".format(capacityKw)} kW",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface

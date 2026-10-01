@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 
-const SlotBattery = ({ slotNumber, capacity, isAvailable, unitPricePerKwh, canEditPrice, onSavePrice }) => {
-  const fillPercent = isAvailable ? 0 : 100;
-  const fillColor = isAvailable ? '#2F6B45' : '#E8A53A';
-  const label = isAvailable ? 'Available' : 'Reserved';
-  const labelColor = isAvailable ? 'text-[#2F6B45]' : 'text-[#B7791F]';
+const SlotBattery = ({ slotNumber, capacity, remainingCapacity, isAvailable, unitPricePerKwh, canEditPrice, onSavePrice }) => {
+  // The fill shows how much of today's shared capacity has actually been used (verified
+  // deliveries), not a plain reserved/available switch - a slot fills gradually as multiple
+  // Prosumers deliver into it, rather than jumping straight to 100% on a single booking.
+  const remaining = remainingCapacity ?? (isAvailable ? capacity : 0);
+  const usedPercent = capacity > 0 ? Math.min(100, Math.max(0, ((capacity - remaining) / capacity) * 100)) : 0;
+  const isFull = remaining <= 0;
+  const fillColor = isFull ? '#E8A53A' : usedPercent > 0 ? '#D9A441' : '#2F6B45';
+  const label = isFull ? 'Full today' : `${remaining.toFixed(1)} kW left`;
+  const labelColor = isFull ? 'text-[#B7791F]' : 'text-[#2F6B45]';
 
   const [editing, setEditing] = useState(false);
   const [draftPrice, setDraftPrice] = useState(unitPricePerKwh ?? 0);
@@ -28,14 +33,14 @@ const SlotBattery = ({ slotNumber, capacity, isAvailable, unitPricePerKwh, canEd
         <div className="relative w-20 h-10 border-2 border-[#726A58] rounded-md overflow-hidden bg-[#FAFAF8]">
           <div
             className="absolute left-0 top-0 bottom-0 transition-all duration-500"
-            style={{ width: `${fillPercent}%`, backgroundColor: fillColor }}
+            style={{ width: `${usedPercent}%`, backgroundColor: fillColor }}
           />
         </div>
         <div className="w-1.5 h-4 bg-[#726A58] rounded-r-sm" />
       </div>
 
       <div className={`text-xs font-bold ${labelColor}`}>{label}</div>
-      <div className="text-[13px] font-semibold text-[#22201A]">{capacity.toFixed(1)} kW</div>
+      <div className="text-[13px] font-semibold text-[#22201A]">{remaining.toFixed(1)} / {capacity.toFixed(1)} kW</div>
 
       {unitPricePerKwh != null && (
         editing ? (

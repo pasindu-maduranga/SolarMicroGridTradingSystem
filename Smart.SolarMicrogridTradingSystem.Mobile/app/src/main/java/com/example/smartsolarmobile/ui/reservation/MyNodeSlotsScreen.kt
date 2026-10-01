@@ -95,7 +95,8 @@ fun MyNodeSlotsScreen(
                                 BatterySlot(
                                     slotNumber = slot.slotNumber,
                                     capacityKw = slot.capacity,
-                                    isAvailable = slot.isAvailable
+                                    isAvailable = slot.isAvailable,
+                                    remainingCapacityKw = slot.remainingCapacity
                                 )
                             }
                         }

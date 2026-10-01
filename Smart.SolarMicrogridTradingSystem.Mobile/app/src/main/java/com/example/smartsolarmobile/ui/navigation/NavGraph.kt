@@ -182,6 +182,7 @@ private fun NavGraphContent(
                 onScreenChange(Screen.Login)
             } else {
                 val vm = viewModel<com.example.smartsolarmobile.ui.reservation.ReserveSlotViewModel>(
+                    key = "reserve_slot_$nic",
                     factory = ReserveSlotViewModelFactory(reservationRepository, authRepository, nic)
                 )
                 ReserveSlotScreen(viewModel = vm, onBack = { onScreenChange(Screen.ProsumerHome) })
@@ -194,6 +195,7 @@ private fun NavGraphContent(
                 onScreenChange(Screen.Login)
             } else {
                 val vm = viewModel<com.example.smartsolarmobile.ui.reservation.MyReservationsViewModel>(
+                    key = "my_reservations_$nic",
                     factory = MyReservationsViewModelFactory(reservationRepository, nic)
                 )
                 MyReservationsScreen(viewModel = vm, onBack = { onScreenChange(Screen.ProsumerHome) })
@@ -206,6 +208,7 @@ private fun NavGraphContent(
                 onScreenChange(Screen.Login)
             } else {
                 val vm = viewModel<com.example.smartsolarmobile.ui.reservation.EarningsViewModel>(
+                    key = "earnings_$nic",
                     factory = EarningsViewModelFactory(reservationRepository, nic)
                 )
                 EarningsScreen(viewModel = vm, onBack = { onScreenChange(Screen.ProsumerHome) })
@@ -215,6 +218,7 @@ private fun NavGraphContent(
         Screen.VerifyReservation -> {
             val verifiedBy = activeSession?.username ?: "Grid Operator"
             val vm = viewModel<com.example.smartsolarmobile.ui.reservation.VerifyReservationViewModel>(
+                key = "verify_reservation_$verifiedBy",
                 factory = VerifyReservationViewModelFactory(reservationRepository, verifiedBy)
             )
             VerifyReservationScreen(viewModel = vm, onBack = { onScreenChange(Screen.GridOperatorHome) })
@@ -223,6 +227,7 @@ private fun NavGraphContent(
         Screen.MyNodeSlots -> {
             val userId = activeSession?.userId ?: ""
             val vm = viewModel<com.example.smartsolarmobile.ui.reservation.MyNodeSlotsViewModel>(
+                key = "my_node_slots_$userId",
                 factory = MyNodeSlotsViewModelFactory(reservationRepository, userId)
             )
             MyNodeSlotsScreen(viewModel = vm, onBack = { onScreenChange(Screen.GridOperatorHome) })
@@ -231,6 +236,7 @@ private fun NavGraphContent(
         Screen.OperatorBookings -> {
             val userId = activeSession?.userId ?: ""
             val vm = viewModel<com.example.smartsolarmobile.ui.reservation.OperatorBookingsViewModel>(
+                key = "operator_bookings_$userId",
                 factory = OperatorBookingsViewModelFactory(reservationRepository, userId)
             )
             OperatorBookingsScreen(viewModel = vm, onBack = { onScreenChange(Screen.GridOperatorHome) })
@@ -239,6 +245,7 @@ private fun NavGraphContent(
         Screen.TransactionHistory -> {
             val userId = activeSession?.userId ?: ""
             val vm = viewModel<com.example.smartsolarmobile.ui.reservation.TransactionHistoryViewModel>(
+                key = "transaction_history_$userId",
                 factory = TransactionHistoryViewModelFactory(reservationRepository, userId)
             )
             TransactionHistoryScreen(viewModel = vm, onBack = { onScreenChange(Screen.GridOperatorHome) })

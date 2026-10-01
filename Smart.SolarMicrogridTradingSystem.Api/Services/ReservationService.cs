@@ -49,15 +49,31 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
                 {
                     return responseFactory.Error("Slot not found.");
                 }
-                if (!slot.IsAvailable)
-                {
-                    return responseFactory.Error("This slot has already been reserved. Please pick another one.");
-                }
 
                 var scheduleError = ValidateSchedulingWindow(request.ScheduledDate);
                 if (scheduleError != null)
                 {
                     return responseFactory.Error(scheduleError);
+                }
+
+                // Two Prosumers can't physically occupy the same slot at the same time - this is
+                // separate from (and checked before) the shared daily capacity pool below, which
+                // governs total energy through the slot across the whole day, not who can be
+                // plugged in at a given instant.
+                if (await HasTimeConflictAsync(node.Id!, slot.SlotNumber, request.ScheduledDate))
+                {
+                    return responseFactory.Error($"Slot #{slot.SlotNumber} is already booked at that time. Please pick a different time.");
+                }
+
+                // A slot's capacity is a shared pool for a given day, not a single exclusive
+                // claim - any number of Prosumers can book it for the same date (at different
+                // times) as long as the hub's cumulative *actual, verified* delivery for that
+                // slot/date hasn't used it all up yet. Nothing is deducted at booking time (see
+                // VerifyReservationAsync) - only once a Grid Operator records a real meter reading.
+                var remaining = await GetRemainingCapacityAsync(node.Id!, slot.SlotNumber, request.ScheduledDate, slot.Capacity);
+                if (remaining <= 0)
+                {
+                    return responseFactory.Error($"Slot #{slot.SlotNumber} is fully booked for {request.ScheduledDate:dd MMM yyyy}. Please choose another date or slot.");
                 }
 
                 var reservation = new Reservation
@@ -73,12 +89,6 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
                     Status = ReservationStatus.Active,
                     ReservedDate = DateTime.UtcNow
                 };
-
-                var slotLocked = await nodeService.SetSlotAvailabilityAsync(node.Id!, slot.SlotNumber, false);
-                if (!slotLocked)
-                {
-                    return responseFactory.Error("Could not reserve the slot. Please try again.");
-                }
 
                 await reservations.InsertOneAsync(reservation);
                 return responseFactory.Success("Slot reserved successfully. Show the QR code at the hub.", ToSummary(reservation));
@@ -148,8 +158,16 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
                     return responseFactory.Error($"This reservation is already {reservation.Status.ToLower()}.");
                 }
 
-                // The actual paid amount comes from the real meter reading the Operator enters here,
-                // not from the slot's rated capacity - a Prosumer is only paid for what they deliver.
+                // This is the point capacity actually gets used up for the slot - checked against
+                // *today* (when this verification is actually happening), not the originally
+                // scheduled date, since that's the real-world date this delivery counts against.
+                var today = DateTime.UtcNow.Date;
+                var remaining = await GetRemainingCapacityAsync(reservation.NodeId, reservation.SlotNumber, today, reservation.SlotCapacity, excludeReservationId: reservation.Id);
+                if (request.EnergyDeliveredKwh > remaining)
+                {
+                    return responseFactory.Error($"This would exceed Slot #{reservation.SlotNumber}'s remaining capacity for today ({remaining:0.##} kWh left). Please confirm the reading or contact Backoffice.");
+                }
+
                 reservation.EnergyDeliveredKwh = request.EnergyDeliveredKwh;
                 reservation.AmountEarned = Math.Round(request.EnergyDeliveredKwh * reservation.UnitPricePerKwh, 2);
                 reservation.Status = ReservationStatus.Completed;
@@ -157,7 +175,6 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
                 reservation.VerifiedBy = request.VerifiedBy;
 
                 await reservations.ReplaceOneAsync(x => x.Id == reservation.Id, reservation);
-                await nodeService.SetSlotAvailabilityAsync(reservation.NodeId, reservation.SlotNumber, true);
 
                 return responseFactory.Success("Reservation verified and completed.", ToSummary(reservation));
             }
@@ -209,21 +226,34 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
                     {
                         return responseFactory.Error("Slot not found.");
                     }
-                    if (!newSlot.IsAvailable)
+
+                    if (await HasTimeConflictAsync(node.Id!, newSlot.SlotNumber, request.NewScheduledDate, excludeReservationId: reservation.Id))
                     {
-                        return responseFactory.Error("This slot has already been reserved. Please pick another one.");
+                        return responseFactory.Error($"Slot #{newSlot.SlotNumber} is already booked at that time. Please pick a different time.");
                     }
 
-                    var newSlotLocked = await nodeService.SetSlotAvailabilityAsync(node.Id!, newSlot.SlotNumber, false);
-                    if (!newSlotLocked)
+                    var remaining = await GetRemainingCapacityAsync(node.Id!, newSlot.SlotNumber, request.NewScheduledDate, newSlot.Capacity);
+                    if (remaining <= 0)
                     {
-                        return responseFactory.Error("Could not reserve the new slot. Please try again.");
+                        return responseFactory.Error($"Slot #{newSlot.SlotNumber} is fully booked for {request.NewScheduledDate:dd MMM yyyy}. Please choose another date or slot.");
                     }
-                    await nodeService.SetSlotAvailabilityAsync(reservation.NodeId, reservation.SlotNumber, true);
 
                     reservation.SlotNumber = newSlot.SlotNumber;
                     reservation.SlotCapacity = newSlot.Capacity;
                     reservation.UnitPricePerKwh = newSlot.UnitPricePerKwh;
+                }
+                else
+                {
+                    if (await HasTimeConflictAsync(reservation.NodeId, reservation.SlotNumber, request.NewScheduledDate, excludeReservationId: reservation.Id))
+                    {
+                        return responseFactory.Error($"Slot #{reservation.SlotNumber} is already booked at that time. Please pick a different time.");
+                    }
+
+                    var remaining = await GetRemainingCapacityAsync(reservation.NodeId, reservation.SlotNumber, request.NewScheduledDate, reservation.SlotCapacity, excludeReservationId: reservation.Id);
+                    if (remaining <= 0)
+                    {
+                        return responseFactory.Error($"Slot #{reservation.SlotNumber} is fully booked for {request.NewScheduledDate:dd MMM yyyy}. Please choose another date or slot.");
+                    }
                 }
 
                 reservation.ScheduledDate = request.NewScheduledDate;
@@ -265,7 +295,6 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
                 reservation.CancelledDate = DateTime.UtcNow;
 
                 await reservations.ReplaceOneAsync(x => x.Id == id, reservation);
-                await nodeService.SetSlotAvailabilityAsync(reservation.NodeId, reservation.SlotNumber, true);
 
                 return responseFactory.Success("Reservation cancelled.", ToSummary(reservation));
             }
@@ -278,6 +307,50 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
         public async Task<bool> HasActiveReservationsForNodeAsync(string nodeId)
         {
             return await reservations.Find(x => x.NodeId == nodeId && x.Status == ReservationStatus.Active).AnyAsync();
+        }
+
+        /// <summary>True if this slot already has another non-cancelled booking within the same
+        /// clock hour as the requested time - two Prosumers can't physically be plugged into the
+        /// same slot at once, regardless of how much of the day's shared energy capacity is still
+        /// free. Matches the mobile/web booking UI's hourly time-slot granularity.</summary>
+        private async Task<bool> HasTimeConflictAsync(string nodeId, int slotNumber, DateTime scheduledDate, string? excludeReservationId = null)
+        {
+            var hourStart = new DateTime(scheduledDate.Year, scheduledDate.Month, scheduledDate.Day, scheduledDate.Hour, 0, 0, DateTimeKind.Utc);
+            var hourEnd = hourStart.AddHours(1);
+            var filter = Builders<Reservation>.Filter.Where(r =>
+                r.NodeId == nodeId &&
+                r.SlotNumber == slotNumber &&
+                r.Status != ReservationStatus.Cancelled &&
+                r.ScheduledDate >= hourStart && r.ScheduledDate < hourEnd &&
+                r.Id != excludeReservationId);
+
+            return await reservations.Find(filter).AnyAsync();
+        }
+
+        /// <summary>How much of a slot's capacity is still free for a given calendar date - the
+        /// pool is shared across every Prosumer booking that slot/date, and is only actually
+        /// drawn down by *verified* deliveries (Completed reservations), never by a pending
+        /// (Active) booking alone. Bucketed by <see cref="Reservation.CompletedDate"/> (when the
+        /// energy was actually delivered and recorded), not ScheduledDate - a reservation can be
+        /// scheduled for one date but verified on another (e.g. verified early, or scheduled days
+        /// in advance), and it's the real delivery date that the capacity pool must reflect.
+        /// <paramref name="excludeReservationId"/> lets a reservation being verified/rescheduled
+        /// check capacity without being affected by its own not-yet-updated record.</summary>
+        private async Task<double> GetRemainingCapacityAsync(string nodeId, int slotNumber, DateTime date, double slotCapacity, string? excludeReservationId = null)
+        {
+            var dayStart = date.Date;
+            var dayEnd = dayStart.AddDays(1);
+            var filter = Builders<Reservation>.Filter.Where(r =>
+                r.NodeId == nodeId &&
+                r.SlotNumber == slotNumber &&
+                r.Status == ReservationStatus.Completed &&
+                r.CompletedDate != null &&
+                r.CompletedDate >= dayStart && r.CompletedDate < dayEnd &&
+                r.Id != excludeReservationId);
+
+            var completed = await reservations.Find(filter).ToListAsync();
+            var usedKwh = completed.Sum(r => r.EnergyDeliveredKwh ?? 0);
+            return slotCapacity - usedKwh;
         }
 
         /// <summary>Energy Slot Reservation Management rule: bookings must be scheduled within the next 7 days.</summary>

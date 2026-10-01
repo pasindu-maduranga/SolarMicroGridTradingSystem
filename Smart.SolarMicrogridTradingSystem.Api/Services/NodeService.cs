@@ -16,6 +16,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
         private readonly IMongoCollection<Node> nodes;
         private readonly IMongoCollection<User> users;
         private readonly IMongoCollection<Role> roles;
+        private readonly IMongoCollection<Reservation> reservations;
         private readonly IApiResponseFactory responseFactory;
 
         public NodeService(IMongoDatabase database, IApiResponseFactory responseFactory)
@@ -23,6 +24,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             nodes = database.GetCollection<Node>("Nodes");
             users = database.GetCollection<User>("Users");
             roles = database.GetCollection<Role>("Roles");
+            reservations = database.GetCollection<Reservation>("Reservations");
             this.responseFactory = responseFactory;
         }
 
@@ -283,16 +285,6 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             return await nodes.Find(x => x.Id == id).FirstOrDefaultAsync();
         }
 
-        public async Task<bool> SetSlotAvailabilityAsync(string nodeId, int slotNumber, bool isAvailable)
-        {
-            var filter = Builders<Node>.Filter.Eq(n => n.Id, nodeId) &
-                         Builders<Node>.Filter.ElemMatch(n => n.Slots, s => s.SlotNumber == slotNumber);
-            var update = Builders<Node>.Update.Set("Slots.$.IsAvailable", isAvailable);
-
-            var result = await nodes.UpdateOneAsync(filter, update);
-            return result.MatchedCount > 0;
-        }
-
         private static List<NodeSlot> GenerateSlots(double capacity, int numberOfSlots, double defaultUnitPricePerKwh)
         {
             if (numberOfSlots <= 0)
@@ -309,9 +301,45 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             return slots;
         }
 
+        /// <summary>A slot's capacity is a shared pool per calendar date (any number of Prosumers
+        /// can book the same slot/date - see ReservationService.GetRemainingCapacityAsync), only
+        /// actually drawn down once a Grid Operator verifies a real meter reading. This overview
+        /// has no date parameter, so it reports *today's* remaining capacity as a representative
+        /// snapshot - the authoritative check for whatever date a Prosumer actually picks happens
+        /// server-side when they submit the reservation.</summary>
         private async Task<object> ToSummaryAsync(Node node)
         {
             var assignedOperator = await users.Find(x => x.AssignedNodeId == node.Id).FirstOrDefaultAsync();
+
+            var today = DateTime.UtcNow.Date;
+            var tomorrow = today.AddDays(1);
+            // Bucketed by CompletedDate (actual delivery), not ScheduledDate - a reservation can
+            // be scheduled for one date and verified on another, and it's the real delivery date
+            // that today's snapshot needs to reflect.
+            var completedToday = await reservations.Find(r =>
+                r.NodeId == node.Id &&
+                r.Status == ReservationStatus.Completed &&
+                r.CompletedDate != null &&
+                r.CompletedDate >= today && r.CompletedDate < tomorrow
+            ).ToListAsync();
+            var usedBySlot = completedToday
+                .GroupBy(r => r.SlotNumber)
+                .ToDictionary(g => g.Key, g => g.Sum(r => r.EnergyDeliveredKwh ?? 0));
+
+            var slotSummaries = node.Slots.Select(s =>
+            {
+                var used = usedBySlot.TryGetValue(s.SlotNumber, out var u) ? u : 0;
+                var remaining = Math.Max(0, s.Capacity - used);
+                return new
+                {
+                    slotNumber = s.SlotNumber,
+                    capacity = s.Capacity,
+                    isAvailable = remaining > 0,
+                    remainingCapacity = remaining,
+                    unitPricePerKwh = s.UnitPricePerKwh
+                };
+            }).ToList();
+
             return new
             {
                 nodeID = node.Id,
@@ -321,9 +349,9 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
                 longitude = node.Longitude,
                 capacity = node.Capacity,
                 numberOfSlots = node.NumberOfSlots,
-                availableSlotsCount = node.Slots.Count(s => s.IsAvailable),
-                availableCapacity = node.Slots.Where(s => s.IsAvailable).Sum(s => s.Capacity),
-                slots = node.Slots.Select(s => new { slotNumber = s.SlotNumber, capacity = s.Capacity, isAvailable = s.IsAvailable, unitPricePerKwh = s.UnitPricePerKwh }),
+                availableSlotsCount = slotSummaries.Count(s => s.isAvailable),
+                availableCapacity = slotSummaries.Sum(s => s.remainingCapacity),
+                slots = slotSummaries,
                 openingTime = node.OpeningTime,
                 closingTime = node.ClosingTime,
                 isActive = node.IsActive,

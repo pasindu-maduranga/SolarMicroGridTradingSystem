@@ -65,6 +65,7 @@ data class ProsumerDto(
     @SerializedName("latitude") val latitude: Double? = null,
     @SerializedName("longitude") val longitude: Double? = null,
     @SerializedName("isActive") val isActive: Boolean,
+    @SerializedName("profilePictureUrl") val profilePictureUrl: String? = null,
     @SerializedName("createdDate") val createdDate: String?
 )
 

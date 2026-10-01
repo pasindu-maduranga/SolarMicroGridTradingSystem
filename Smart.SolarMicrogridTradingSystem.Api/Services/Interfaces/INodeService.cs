@@ -22,6 +22,5 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services.Interfaces
         Task<Node?> GetByIdAsync(string id);
 
         /// <summary>Flips a single slot's availability atomically. Returns false if the node/slot was not found.</summary>
-        Task<bool> SetSlotAvailabilityAsync(string nodeId, int slotNumber, bool isAvailable);
     }
 }

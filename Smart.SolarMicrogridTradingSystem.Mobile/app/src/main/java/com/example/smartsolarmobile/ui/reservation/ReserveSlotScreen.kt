@@ -1,7 +1,11 @@
 package com.example.smartsolarmobile.ui.reservation
 
 import android.Manifest
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
 import android.location.LocationManager
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -43,6 +47,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -55,12 +60,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.smartsolarmobile.R
 import com.example.smartsolarmobile.data.api.models.NodeDto
 import com.example.smartsolarmobile.data.repository.parseIsoUtc
 import com.example.smartsolarmobile.data.repository.toFriendlyString
 import com.example.smartsolarmobile.ui.components.AppSnackbarHost
 import com.example.smartsolarmobile.ui.components.QrCodeImage
-import com.example.smartsolarmobile.ui.components.rememberDateTimePickerLauncher
+import com.example.smartsolarmobile.ui.components.vectorToBitmapDescriptor
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -78,6 +84,22 @@ import com.google.maps.android.compose.rememberMarkerState
 
 private val SRI_LANKA_CENTER = LatLng(7.8731, 80.7718)
 
+/** Opens turn-by-turn directions in the Google Maps app, explicitly from the Prosumer's current
+ *  location to the hub - falls back to whatever app can handle a maps URL if Google Maps itself
+ *  isn't installed. */
+private fun openDirections(context: Context, from: LatLng, to: LatLng) {
+    val uri = Uri.parse(
+        "https://www.google.com/maps/dir/?api=1&origin=${from.latitude},${from.longitude}" +
+            "&destination=${to.latitude},${to.longitude}&travelmode=driving"
+    )
+    val mapsIntent = Intent(Intent.ACTION_VIEW, uri).apply { setPackage("com.google.android.apps.maps") }
+    try {
+        context.startActivity(mapsIntent)
+    } catch (e: ActivityNotFoundException) {
+        context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+    }
+}
+
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ReserveSlotScreen(
@@ -89,40 +111,49 @@ fun ReserveSlotScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
 
-    val launchDateTimePicker = rememberDateTimePickerLauncher(
-        onCancelled = { viewModel.cancelSlotRequest() },
-        onPicked = { pickedDate ->
-            val node = uiState.selectedNode
-            val slotNumber = uiState.pendingSlotNumber
-            if (node != null && slotNumber != null) {
-                viewModel.reserveSlot(node.nodeId, slotNumber, pickedDate)
-            }
-        }
-    )
-
-    LaunchedEffect(uiState.pendingSlotNumber) {
-        if (uiState.pendingSlotNumber != null) {
-            launchDateTimePicker()
-        }
-    }
-
     LaunchedEffect(Unit) {
         viewModel.loadNodes()
         viewModel.loadProsumerLocation()
+        // Proactively prompt for location access as soon as this screen opens, rather than only
+        // showing a passive "Enable location" card - a Prosumer reserving a slot should be asked
+        // up front, not left to notice and tap a banner themselves.
+        if (!locationPermission.status.isGranted) {
+            locationPermission.launchPermissionRequest()
+        }
     }
 
-    LaunchedEffect(locationPermission.status) {
-        if (locationPermission.status.isGranted) {
-            val locationManager = context.getSystemService(android.content.Context.LOCATION_SERVICE) as LocationManager
-            val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
-            val lastKnown = providers.firstNotNullOfOrNull { provider ->
-                try {
-                    if (locationManager.isProviderEnabled(provider)) locationManager.getLastKnownLocation(provider) else null
-                } catch (e: SecurityException) {
-                    null
+    // getLastKnownLocation() alone can return a stale OS-cached fix (sometimes minutes or hours
+    // old, or null if no app has used that provider recently) - shown immediately for a fast
+    // first paint. Updates then keep coming for as long as this screen is open (like a live
+    // ride-hailing map), not just a single fresh fix, so the pin and distance track the Prosumer
+    // as they actually move; onDispose stops updates when they leave the screen.
+    DisposableEffect(locationPermission.status) {
+        if (!locationPermission.status.isGranted) return@DisposableEffect onDispose {}
+
+        val locationManager = context.getSystemService(android.content.Context.LOCATION_SERVICE) as LocationManager
+        val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
+        val listener = object : android.location.LocationListener {
+            override fun onLocationChanged(location: android.location.Location) {
+                viewModel.onLocationAvailable(location)
+            }
+        }
+
+        try {
+            providers.firstNotNullOfOrNull { provider ->
+                if (locationManager.isProviderEnabled(provider)) locationManager.getLastKnownLocation(provider) else null
+            }?.let { viewModel.onLocationAvailable(it) }
+
+            providers.forEach { provider ->
+                if (locationManager.isProviderEnabled(provider)) {
+                    locationManager.requestLocationUpdates(provider, 3000L, 5f, listener)
                 }
             }
-            viewModel.onLocationAvailable(lastKnown)
+        } catch (e: SecurityException) {
+            // Permission revoked between the check above and this call - nothing to request.
+        }
+
+        onDispose {
+            try { locationManager.removeUpdates(listener) } catch (e: SecurityException) { }
         }
     }
 
@@ -172,6 +203,7 @@ fun ReserveSlotScreen(
                 nearestNode = uiState.filteredNodes.firstOrNull(),
                 userLatitude = uiState.userLatitude,
                 userLongitude = uiState.userLongitude,
+                isLiveLocation = uiState.isLiveLocation,
                 isLoading = uiState.isLoading,
                 onSelectNode = { viewModel.selectNode(it) }
             )
@@ -212,6 +244,19 @@ fun ReserveSlotScreen(
         )
     }
 
+    val pendingSlotNumber = uiState.pendingSlotNumber
+    val pendingNode = uiState.selectedNode
+    if (pendingSlotNumber != null && pendingNode != null) {
+        ReservationCalendarDialog(
+            slotNumber = pendingSlotNumber,
+            openingTime = pendingNode.openingTime,
+            closingTime = pendingNode.closingTime,
+            existingBookings = uiState.selectedNodeBookings,
+            onDismiss = { viewModel.cancelSlotRequest() },
+            onConfirm = { pickedDate -> viewModel.reserveSlot(pendingNode.nodeId, pendingSlotNumber, pickedDate) }
+        )
+    }
+
     uiState.confirmedReservation?.let { reservation ->
         AlertDialog(
             onDismissRequest = { viewModel.dismissConfirmation() },
@@ -246,9 +291,13 @@ private fun ReserveMapSection(
     nearestNode: NodeWithDistance?,
     userLatitude: Double?,
     userLongitude: Double?,
+    isLiveLocation: Boolean,
     isLoading: Boolean,
     onSelectNode: (NodeDto) -> Unit
 ) {
+    val context = LocalContext.current
+    val hubIcon = remember { vectorToBitmapDescriptor(context, R.drawable.ic_hub_marker) }
+
     Box(modifier = Modifier.fillMaxWidth().height(280.dp)) {
         val cameraPositionState = rememberCameraPositionState {
             position = CameraPosition.fromLatLngZoom(SRI_LANKA_CENTER, 8f)
@@ -280,7 +329,7 @@ private fun ReserveMapSection(
                     // which is why a location update wasn't reliably moving the pin.
                     state = rememberMarkerState(key = "user_${userLatLng.latitude}_${userLatLng.longitude}", position = userLatLng),
                     title = "Your location",
-                    snippet = "This is where you're registered",
+                    snippet = if (isLiveLocation) "Live location" else "Your registered location (enable location access for live tracking)",
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
                     zIndex = 2f
                 )
@@ -304,7 +353,7 @@ private fun ReserveMapSection(
                     title = entry.node.name,
                     snippet = entry.distanceKm?.let { "%.1f km away • ${entry.node.availableSlotsCount} slot(s) available".format(it) }
                         ?: "${entry.node.availableSlotsCount} slot(s) available",
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE),
+                    icon = hubIcon,
                     zIndex = 1f,
                     onClick = {
                         onSelectNode(entry.node)
@@ -317,17 +366,35 @@ private fun ReserveMapSection(
         // Always-visible distance readout for the nearest hub, so the real distance is clear
         // without needing to tap a marker.
         nearestNode?.distanceKm?.let { nearestKm ->
-            Text(
-                text = "Nearest: ${nearestNode.node.name} • %.1f km away".format(nearestKm),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimary,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = 8.dp)
                     .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(20.dp))
-                    .padding(horizontal = 14.dp, vertical = 6.dp)
-            )
+                    .padding(horizontal = 6.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "Nearest: ${nearestNode.node.name} • %.1f km away".format(nearestKm),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+                if (userLatLng != null) {
+                    IconButton(
+                        onClick = { openDirections(context, userLatLng, LatLng(nearestNode.node.latitude, nearestNode.node.longitude)) },
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.LocationOn,
+                            contentDescription = "Get directions",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
         }
 
         if (isLoading) {
@@ -390,7 +457,16 @@ private fun SlotPickerDialog(
         title = { Text(node.name) },
         text = {
             Column {
-                Text("Tap an available slot to reserve it", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                // A slot's capacity is shared across every Prosumer booking it for the same
+                // date, not claimed exclusively by one booking - so every slot is tappable here
+                // regardless of today's remaining-capacity snapshot. The date you pick next
+                // determines what's actually still free; the server has the final say.
+                Text(
+                    "Pick any slot, then choose your date - capacity is shared, so a slot " +
+                        "showing little left today may still be free on another date.",
+                    fontSize = 12.5.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Spacer(Modifier.height(12.dp))
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
@@ -398,33 +474,35 @@ private fun SlotPickerDialog(
                 ) {
                     items(node.slots, key = { it.slotNumber }) { slot ->
                         val isBusy = reservingSlotNumber == slot.slotNumber
-                        val isTappable = slot.isAvailable && reservingSlotNumber == null
+                        val isTappable = reservingSlotNumber == null
+                        val isFullToday = slot.remainingCapacity <= 0
 
                         Box(
                             modifier = Modifier
                                 .padding(4.dp)
-                                .size(64.dp)
+                                .size(68.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
                                     when {
-                                        !slot.isAvailable -> MaterialTheme.colorScheme.surfaceVariant
                                         isBusy -> MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                        isFullToday -> MaterialTheme.colorScheme.surfaceVariant
                                         else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                                     }
                                 )
                                 .clickable(enabled = isTappable) { onReserve(slot.slotNumber) },
                             contentAlignment = Alignment.Center
                         ) {
-                            when {
-                                isBusy -> CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                                slot.isAvailable -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            if (isBusy) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            } else {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text("#${slot.slotNumber}", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                    Text("${slot.capacity.toInt()}kW", fontSize = 10.sp)
-                                    Text("Rs.${slot.unitPricePerKwh}/kWh", fontSize = 8.5.sp)
-                                }
-                                else -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("#${slot.slotNumber}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text("Taken", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(
+                                        if (isFullToday) "Full today" else "${slot.remainingCapacity.toInt()}/${slot.capacity.toInt()}kW",
+                                        fontSize = 9.5.sp,
+                                        color = if (isFullToday) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text("Rs.${slot.unitPricePerKwh}/kWh", fontSize = 8.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }

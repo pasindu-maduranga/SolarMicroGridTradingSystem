@@ -2,6 +2,9 @@ package com.example.smartsolarmobile.ui.profile
 
 import android.Manifest
 import android.location.LocationManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -9,16 +12,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -27,11 +35,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -45,13 +52,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.smartsolarmobile.ui.components.AppSnackbarHost
 import com.example.smartsolarmobile.ui.components.LocationPickerDialog
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -72,6 +83,16 @@ fun EditProfileScreen(
     val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
     var liveLatitude by remember { mutableStateOf<Double?>(null) }
     var liveLongitude by remember { mutableStateOf<Double?>(null) }
+
+    val pickImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+        if (bytes != null) {
+            val mimeType = context.contentResolver.getType(uri) ?: "image/jpeg"
+            val extension = mimeType.substringAfter("/", "jpg")
+            viewModel.uploadPhoto(bytes, "profile.$extension", mimeType)
+        }
+    }
 
     LaunchedEffect(Unit) { viewModel.load() }
 
@@ -126,12 +147,6 @@ fun EditProfileScreen(
                 CircularProgressIndicator()
             }
         } else {
-            val fieldColors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
-                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                cursorColor = MaterialTheme.colorScheme.onSurface
-            )
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -139,51 +154,82 @@ fun EditProfileScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(20.dp)
             ) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(contentAlignment = Alignment.BottomEnd) {
+                        Box(
+                            modifier = Modifier
+                                .size(96.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            when {
+                                uiState.isUploadingPhoto -> CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 2.dp)
+                                uiState.profilePictureUrl != null -> AsyncImage(
+                                    model = uiState.profilePictureUrl,
+                                    contentDescription = "Profile photo",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                                else -> Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        IconButton(
+                            onClick = { pickImageLauncher.launch("image/*") },
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onSurface)
+                        ) {
+                            Icon(
+                                Icons.Default.CameraAlt,
+                                contentDescription = "Change photo",
+                                tint = Color.White,
+                                modifier = Modifier.size(15.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(24.dp))
+
                 ProfileSectionCard {
-                    OutlinedTextField(
+                    UnderlineField(
+                        label = "First name",
                         value = uiState.firstName,
-                        onValueChange = viewModel::onFirstNameChanged,
-                        label = { Text("First name") },
-                        singleLine = true,
-                        colors = fieldColors,
-                        modifier = Modifier.fillMaxWidth()
+                        onValueChange = viewModel::onFirstNameChanged
                     )
-                    Spacer(Modifier.height(14.dp))
-                    OutlinedTextField(
+                    UnderlineField(
+                        label = "Last name",
                         value = uiState.lastName,
-                        onValueChange = viewModel::onLastNameChanged,
-                        label = { Text("Last name") },
-                        singleLine = true,
-                        colors = fieldColors,
-                        modifier = Modifier.fillMaxWidth()
+                        onValueChange = viewModel::onLastNameChanged
                     )
-                    Spacer(Modifier.height(14.dp))
-                    OutlinedTextField(
+                    UnderlineField(
+                        label = "Email",
                         value = uiState.email,
                         onValueChange = viewModel::onEmailChanged,
-                        label = { Text("Email") },
-                        singleLine = true,
-                        colors = fieldColors,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-                        modifier = Modifier.fillMaxWidth()
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
                     )
-                    Spacer(Modifier.height(14.dp))
-                    OutlinedTextField(
+                    UnderlineField(
+                        label = "Phone number",
                         value = uiState.phoneNumber,
                         onValueChange = viewModel::onPhoneChanged,
-                        label = { Text("Phone number") },
-                        singleLine = true,
-                        colors = fieldColors,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
-                        modifier = Modifier.fillMaxWidth()
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next)
                     )
-                    Spacer(Modifier.height(14.dp))
-                    OutlinedTextField(
+                    UnderlineField(
+                        label = "Address",
                         value = uiState.address,
                         onValueChange = viewModel::onAddressChanged,
-                        label = { Text("Address") },
-                        colors = fieldColors,
-                        modifier = Modifier.fillMaxWidth()
+                        singleLine = false,
+                        isLast = true
                     )
                 }
 
@@ -321,6 +367,41 @@ fun EditProfileScreen(
                 OutlinedButton(onClick = { viewModel.dismissDeactivateConfirm() }) { Text("Cancel") }
             }
         )
+    }
+}
+
+/** Minimal label-above / underline-below field (no box border) - matches a clean "Edit Profile"
+ *  look instead of Material3's boxed OutlinedTextField. */
+@Composable
+private fun UnderlineField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    singleLine: Boolean = true,
+    isLast: Boolean = false
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = label.uppercase(),
+            fontSize = 10.5.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.6.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.height(4.dp))
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = singleLine,
+            keyboardOptions = keyboardOptions,
+            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
+        )
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f), thickness = 1.dp)
+        if (!isLast) Spacer(Modifier.height(16.dp))
     }
 }
 

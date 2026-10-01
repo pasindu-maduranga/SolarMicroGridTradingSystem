@@ -25,8 +25,10 @@ data class ReserveSlotUiState(
     val nodes: List<NodeWithDistance> = emptyList(),
     val userLatitude: Double? = null,
     val userLongitude: Double? = null,
+    val isLiveLocation: Boolean = false,
     val searchQuery: String = "",
     val selectedNode: NodeDto? = null,
+    val selectedNodeBookings: List<ReservationDto> = emptyList(),
     val pendingSlotNumber: Int? = null,
     val reservingSlotNumber: Int? = null,
     val confirmedReservation: ReservationDto? = null,
@@ -48,13 +50,13 @@ class ReserveSlotViewModel(
     private val _uiState = MutableStateFlow(ReserveSlotUiState())
     val uiState: StateFlow<ReserveSlotUiState> = _uiState.asStateFlow()
 
-    // The Prosumer's registered home location (set in Edit Profile) is the source of truth for
-    // "how far is this hub from me" - it's a stable, deliberately-chosen point. Live device GPS is
-    // only used as a fallback when no profile location has been saved yet (e.g. on an emulator,
-    // or for an older account created before location capture existed).
+    // Live device GPS is the source of truth for "how far is this hub from me right now" - the
+    // Prosumer's registered home location (set in Edit Profile) is only a fallback for when GPS
+    // isn't available yet (permission not granted, no fix acquired, or running on an emulator
+    // with no simulated location set).
     private var profileLocation: Location? = null
     private var deviceLocation: Location? = null
-    private fun activeLocation(): Location? = profileLocation ?: deviceLocation
+    private fun activeLocation(): Location? = deviceLocation ?: profileLocation
 
     /** Fetches the Prosumer's saved home location so distances reflect where they actually
      *  registered from, not just whatever the device's GPS happens to report right now. */
@@ -87,7 +89,13 @@ class ReserveSlotViewModel(
 
     private fun updateLocationState() {
         val loc = activeLocation()
-        _uiState.update { it.copy(userLatitude = loc?.latitude, userLongitude = loc?.longitude) }
+        _uiState.update {
+            it.copy(
+                userLatitude = loc?.latitude,
+                userLongitude = loc?.longitude,
+                isLiveLocation = deviceLocation != null
+            )
+        }
     }
 
     fun loadNodes() {
@@ -127,7 +135,18 @@ class ReserveSlotViewModel(
     }
 
     fun selectNode(node: NodeDto?) {
-        _uiState.update { it.copy(selectedNode = node, pendingSlotNumber = null) }
+        _uiState.update { it.copy(selectedNode = node, selectedNodeBookings = emptyList(), pendingSlotNumber = null) }
+        if (node != null) {
+            // So the date/time picker can show "already booked" times for transparency -
+            // capacity is shared (see ReservationRepository), so this is informational, not a
+            // hard block on picking a popular time.
+            viewModelScope.launch {
+                repository.getReservationsByNode(node.nodeId).onSuccess { bookings ->
+                    val relevant = bookings.filter { it.status != "Cancelled" }
+                    _uiState.update { it.copy(selectedNodeBookings = relevant) }
+                }
+            }
+        }
     }
 
     /** Tapping an available slot doesn't reserve immediately - it opens the date/time picker

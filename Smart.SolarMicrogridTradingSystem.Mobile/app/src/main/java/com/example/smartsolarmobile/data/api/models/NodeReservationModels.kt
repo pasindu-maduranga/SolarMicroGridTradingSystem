@@ -6,6 +6,10 @@ data class NodeSlotDto(
     @SerializedName("slotNumber") val slotNumber: Int,
     @SerializedName("capacity") val capacity: Double,
     @SerializedName("isAvailable") val isAvailable: Boolean,
+    // A slot's capacity is a shared pool per calendar date, not a single exclusive claim - this
+    // is only today's snapshot (no date parameter on this endpoint); the server is the final
+    // authority for whatever date the Prosumer actually picks when they submit a reservation.
+    @SerializedName("remainingCapacity") val remainingCapacity: Double = capacity,
     @SerializedName("unitPricePerKwh") val unitPricePerKwh: Double
 )
 

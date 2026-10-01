@@ -1,3 +1,6 @@
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
+using Microsoft.AspNetCore.Http;
 using MongoDB.Driver;
 using Smart.SolarMicrogridTradingSystem.Api.Models;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
@@ -13,14 +16,16 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
     public class ProsumerService : IProsumerService
     {
         private readonly IMongoCollection<Prosumer> prosumers;
-        private readonly IMongoCollection<Role> roles;
+        private readonly IMongoCollection<Smart.SolarMicrogridTradingSystem.Api.Models.Role> roles;
         private readonly IApiResponseFactory responseFactory;
+        private readonly Cloudinary cloudinary;
 
-        public ProsumerService(IMongoDatabase database, IApiResponseFactory responseFactory)
+        public ProsumerService(IMongoDatabase database, IApiResponseFactory responseFactory, Cloudinary cloudinary)
         {
             prosumers = database.GetCollection<Prosumer>("Prosumers");
-            roles = database.GetCollection<Role>("Roles");
+            roles = database.GetCollection<Smart.SolarMicrogridTradingSystem.Api.Models.Role>("Roles");
             this.responseFactory = responseFactory;
+            this.cloudinary = cloudinary;
         }
 
         public async Task<ApiResponse> GetAllProsumersAsync()
@@ -202,6 +207,48 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        public async Task<ApiResponse> UploadProsumerPhotoAsync(string nic, IFormFile file)
+        {
+            try
+            {
+                var prosumer = await prosumers.Find(x => x.NIC == nic).FirstOrDefaultAsync();
+                if (prosumer == null)
+                {
+                    return responseFactory.Error("Prosumer not found.");
+                }
+                if (file == null || file.Length == 0)
+                {
+                    return responseFactory.Error("No photo was uploaded.");
+                }
+
+                await using var stream = file.OpenReadStream();
+                var uploadParams = new ImageUploadParams
+                {
+                    File = new FileDescription(file.FileName, stream),
+                    // One folder per Prosumer, overwriting the previous photo instead of
+                    // accumulating a new Cloudinary asset every time they re-upload.
+                    PublicId = $"prosumers/{nic}",
+                    Overwrite = true,
+                    Transformation = new Transformation().Width(400).Height(400).Crop("fill").Gravity("face")
+                };
+                var uploadResult = await cloudinary.UploadAsync(uploadParams);
+                if (uploadResult.Error != null)
+                {
+                    return responseFactory.Error(uploadResult.Error.Message);
+                }
+
+                prosumer.ProfilePictureUrl = uploadResult.SecureUrl.ToString();
+                prosumer.ModifiedDate = DateTime.UtcNow;
+                await prosumers.ReplaceOneAsync(x => x.NIC == nic, prosumer);
+
+                return responseFactory.Success("Profile photo updated.", ToSummary(prosumer));
+            }
+            catch (Exception ex)
+            {
+                return responseFactory.Error(ex.Message);
+            }
+        }
+
         private static object ToSummary(Prosumer prosumer) => new
         {
             nic = prosumer.NIC,
@@ -213,6 +260,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             latitude = prosumer.Latitude,
             longitude = prosumer.Longitude,
             isActive = prosumer.IsActive,
+            profilePictureUrl = prosumer.ProfilePictureUrl,
             approvalStatus = prosumer.ApprovalStatus,
             approvedBy = prosumer.ApprovedBy,
             approvedDate = prosumer.ApprovedDate,

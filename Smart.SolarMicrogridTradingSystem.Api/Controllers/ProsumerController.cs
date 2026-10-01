@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Requests;
@@ -50,6 +51,13 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
         public async Task<ApiResponse> Put(string nic, [FromBody] UpdateProsumerRequest request)
         {
             return await prosumerService.UpdateProsumerAsync(nic, request);
+        }
+
+        [HttpPost]
+        [Route("{nic}/photo")]
+        public async Task<ApiResponse> UploadPhoto(string nic, IFormFile file)
+        {
+            return await prosumerService.UploadProsumerPhotoAsync(nic, file);
         }
 
         [HttpDelete]

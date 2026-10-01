@@ -128,6 +128,7 @@ export default function SlotsDetail() {
               key={slot.slotNumber}
               slotNumber={slot.slotNumber}
               capacity={slot.capacity}
+              remainingCapacity={slot.remainingCapacity}
               isAvailable={slot.isAvailable}
               unitPricePerKwh={slot.unitPricePerKwh}
               canEditPrice={canEditPrice}
