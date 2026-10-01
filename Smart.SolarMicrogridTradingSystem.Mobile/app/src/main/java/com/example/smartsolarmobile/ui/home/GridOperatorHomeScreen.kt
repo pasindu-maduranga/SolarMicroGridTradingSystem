@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.async
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.example.smartsolarmobile.R
 import com.example.smartsolarmobile.data.api.models.UserSession
 import com.example.smartsolarmobile.data.repository.ReservationRepository
+import com.example.smartsolarmobile.ui.components.DashboardStatCard
 import com.example.smartsolarmobile.ui.components.GreetingHero
 import com.example.smartsolarmobile.ui.components.MenuGridTile
 
@@ -49,23 +51,45 @@ private data class OperatorMenuItem(
 @Composable
 fun GridOperatorHomeScreen(
     session: UserSession,
+    reservationRepository: ReservationRepository,
     onLogout: () -> Unit,
     onNavigateToVerify: () -> Unit,
     onNavigateToMyNodeSlots: () -> Unit,
     onNavigateToBookings: () -> Unit,
     onNavigateToTransactionHistory: () -> Unit
 ) {
-    val reservationRepository = remember { ReservationRepository() }
     var canVerify by remember { mutableStateOf(false) }
     var canViewSlots by remember { mutableStateOf(false) }
     var canViewBookings by remember { mutableStateOf(false) }
     var canViewTransactions by remember { mutableStateOf(false) }
+    var activeBookingCount by remember { mutableStateOf<Int?>(null) }
+    var completedCount by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(session.roleId) {
-        canVerify = reservationRepository.hasAccess(session.roleId, "VERIFYRESERVATION")
-        canViewSlots = reservationRepository.hasAccess(session.roleId, "MYNODESLOTS")
-        canViewBookings = reservationRepository.hasAccess(session.roleId, "OPERATORBOOKINGS")
-        canViewTransactions = reservationRepository.hasAccess(session.roleId, "TRANSACTIONHISTORY")
+        // Run in parallel, not sequentially - each check is a separate network round trip
+        // (or timeout), and awaiting them one at a time made the total wait add up.
+        val verify = async { reservationRepository.hasAccess(session.roleId, "VERIFYRESERVATION") }
+        val slots = async { reservationRepository.hasAccess(session.roleId, "MYNODESLOTS") }
+        val bookings = async { reservationRepository.hasAccess(session.roleId, "OPERATORBOOKINGS") }
+        val transactions = async { reservationRepository.hasAccess(session.roleId, "TRANSACTIONHISTORY") }
+        canVerify = verify.await()
+        canViewSlots = slots.await()
+        canViewBookings = bookings.await()
+        canViewTransactions = transactions.await()
+    }
+
+    LaunchedEffect(canViewBookings, session.userId) {
+        if (canViewBookings) {
+            reservationRepository.getAllNodes().onSuccess { nodes ->
+                val myNode = nodes.firstOrNull { it.assignedGridOperatorUserId == session.userId }
+                if (myNode != null) {
+                    reservationRepository.getReservationsByNode(myNode.nodeId).onSuccess { list ->
+                        activeBookingCount = list.count { it.status == "Active" }
+                        completedCount = list.count { it.status == "Completed" }
+                    }
+                }
+            }
+        }
     }
 
     val displayName = session.fullName.ifBlank { session.username }
@@ -122,6 +146,25 @@ fun GridOperatorHomeScreen(
             )
 
             Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
+                if (canViewBookings) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        DashboardStatCard(
+                            label = "Active Bookings",
+                            value = activeBookingCount,
+                            modifier = Modifier.weight(1f)
+                        )
+                        DashboardStatCard(
+                            label = "Completed",
+                            value = completedCount,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
                 Text(
                     text = "Operator Capabilities",
                     fontSize = 16.sp,

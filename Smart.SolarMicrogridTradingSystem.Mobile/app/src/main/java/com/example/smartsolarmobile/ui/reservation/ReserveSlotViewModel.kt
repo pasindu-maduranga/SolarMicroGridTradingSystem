@@ -7,6 +7,7 @@ import com.example.smartsolarmobile.data.api.models.NodeDto
 import com.example.smartsolarmobile.data.api.models.ReservationDto
 import com.example.smartsolarmobile.data.repository.AuthRepository
 import com.example.smartsolarmobile.data.repository.ReservationRepository
+import com.example.smartsolarmobile.util.toFriendlyMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -98,7 +99,7 @@ class ReserveSlotViewModel(
                     _uiState.update { it.copy(isLoading = false, nodes = withDistance(active)) }
                 },
                 onFailure = { e ->
-                    _uiState.update { it.copy(isLoading = false, errorMessage = e.message ?: "Failed to load nodes.") }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = e.toFriendlyMessage("Failed to load nodes.")) }
                 }
             )
         }
@@ -155,7 +156,7 @@ class ReserveSlotViewModel(
                     loadNodes()
                 },
                 onFailure = { e ->
-                    _uiState.update { it.copy(reservingSlotNumber = null, pendingSlotNumber = null, errorMessage = e.message ?: "Could not reserve this slot.") }
+                    _uiState.update { it.copy(reservingSlotNumber = null, pendingSlotNumber = null, errorMessage = e.toFriendlyMessage("Could not reserve this slot.")) }
                 }
             )
         }

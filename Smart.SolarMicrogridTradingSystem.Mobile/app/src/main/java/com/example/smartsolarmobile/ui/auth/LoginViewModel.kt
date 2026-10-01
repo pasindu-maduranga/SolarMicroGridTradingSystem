@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smartsolarmobile.data.api.models.UserSession
 import com.example.smartsolarmobile.data.repository.AuthRepository
+import com.example.smartsolarmobile.util.toFriendlyMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,6 +39,16 @@ class LoginViewModel(
 
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+
+    /** This ViewModel is kept alive for the whole app (it's Activity-scoped, not tied to the
+     *  current screen), so without this, isSuccess/authenticatedSession from a previous login
+     *  would still be set the next time the Login screen is shown (e.g. right after signing
+     *  out) and immediately bounce the user straight back in. */
+    fun consumeSuccess() {
+        _uiState.update {
+            it.copy(username = "", password = "", isSuccess = false, authenticatedSession = null)
+        }
     }
 
     fun login() {
@@ -91,7 +102,7 @@ class LoginViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = exception.message ?: "Authentication failed. Please check your credentials."
+                            errorMessage = exception.toFriendlyMessage("Authentication failed. Please check your credentials.")
                         )
                     }
                 }

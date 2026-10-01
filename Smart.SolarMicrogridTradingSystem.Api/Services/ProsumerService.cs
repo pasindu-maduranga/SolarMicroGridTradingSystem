@@ -111,7 +111,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
-        public async Task<ApiResponse> UpdateProsumerAsync(string nic, UpdateProsumerRequest request, bool isBackofficeUser)
+        public async Task<ApiResponse> UpdateProsumerAsync(string nic, UpdateProsumerRequest request)
         {
             try
             {
@@ -119,12 +119,6 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
                 if (prosumer == null)
                 {
                     return responseFactory.Error("Prosumer not found.");
-                }
-
-                // Deactivated accounts can only be reactivated by a Backoffice officer.
-                if (!prosumer.IsActive && request.IsActive && !isBackofficeUser)
-                {
-                    return responseFactory.Error("Only Backoffice users can reactivate deactivated prosumer accounts.");
                 }
 
                 prosumer.FirstName = request.FirstName;

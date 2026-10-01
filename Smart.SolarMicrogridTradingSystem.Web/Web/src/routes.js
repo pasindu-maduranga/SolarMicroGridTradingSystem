@@ -23,7 +23,9 @@ import SlotsOverview from 'src/views/MicrogridNodeManagement/Pages/SlotsOverview
 import SlotsDetail from 'src/views/MicrogridNodeManagement/Pages/SlotsDetail';
 import ProsumerApprovals from 'src/views/ProsumerManagement/Pages/Approvals';
 import ProsumerListing from 'src/views/ProsumerManagement/Pages/Listing';
+import ProsumerAddEdit from 'src/views/ProsumerManagement/Pages/AddEdit';
 import ReservationsListing from 'src/views/Reservations/Pages/Listing';
+import ReservationAddEdit from 'src/views/Reservations/Pages/AddEdit';
 import Unauthorized from './utils/unauthorized';
 
 const routes = (isLoggedIn) => [
@@ -77,13 +79,15 @@ const routes = (isLoggedIn) => [
         path: 'prosumers',
         children: [
           { path: 'profiles', element: <ProsumerListing /> },
+          { path: 'addEdit', element: <ProsumerAddEdit /> },
           { path: 'approvals', element: <ProsumerApprovals /> }
         ]
       },
       {
         path: 'reservations',
         children: [
-          { path: 'listing', element: <ReservationsListing /> }
+          { path: 'listing', element: <ReservationsListing /> },
+          { path: 'addEdit/:reservationID', element: <ReservationAddEdit /> }
         ]
       }
     ]

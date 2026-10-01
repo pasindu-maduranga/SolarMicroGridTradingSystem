@@ -28,7 +28,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.smartsolarmobile.R
 import com.example.smartsolarmobile.data.api.models.UserSession
+import com.example.smartsolarmobile.ui.components.AppSnackbarHost
 import com.example.smartsolarmobile.ui.components.CurvedBottomShape
 import com.example.smartsolarmobile.ui.components.CustomTextField
 import com.example.smartsolarmobile.ui.components.PrimaryButton
@@ -81,6 +81,7 @@ fun LoginScreen(
     LaunchedEffect(uiState.isSuccess, uiState.authenticatedSession) {
         if (uiState.isSuccess && uiState.authenticatedSession != null) {
             onLoginSuccess(uiState.authenticatedSession!!)
+            viewModel.consumeSuccess()
         }
     }
 
@@ -236,7 +237,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        SnackbarHost(
+        AppSnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)

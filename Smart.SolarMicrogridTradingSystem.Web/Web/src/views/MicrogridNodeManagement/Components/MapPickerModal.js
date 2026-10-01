@@ -8,7 +8,7 @@ const searchProvider = new OpenStreetMapProvider();
 
 const DEFAULT_CENTER = [6.9271, 79.8612]; // Colombo, Sri Lanka
 
-const MapPickerModal = ({ open, onClose, initialLat, initialLng, onConfirm }) => {
+const MapPickerModal = ({ open, onClose, initialLat, initialLng, onConfirm, title = 'Pick node location' }) => {
   const hasInitial = initialLat != null && initialLng != null;
   const [position, setPosition] = useState(hasInitial ? [initialLat, initialLng] : null);
   const [mapCenter, setMapCenter] = useState(hasInitial ? [initialLat, initialLng] : DEFAULT_CENTER);
@@ -101,7 +101,7 @@ const MapPickerModal = ({ open, onClose, initialLat, initialLng, onConfirm }) =>
           <Transition.Child as={Fragment} enter="ease-out duration-150" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-100" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
             <Dialog.Panel className="w-full h-full bg-white rounded-2xl overflow-hidden flex flex-col shadow-2xl">
               <div className="flex items-center gap-3 p-4 border-b border-[#E6DDC4] flex-shrink-0">
-                <Dialog.Title className="text-base font-bold text-[#22201A] flex-shrink-0">Pick node location</Dialog.Title>
+                <Dialog.Title className="text-base font-bold text-[#22201A] flex-shrink-0">{title}</Dialog.Title>
                 <form onSubmit={handleSearch} className="flex-1 flex gap-2 relative">
                   <input
                     type="text"

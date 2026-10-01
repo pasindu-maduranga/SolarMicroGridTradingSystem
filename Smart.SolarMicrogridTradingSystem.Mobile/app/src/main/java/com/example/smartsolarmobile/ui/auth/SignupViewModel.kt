@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smartsolarmobile.data.api.models.ProsumerDto
 import com.example.smartsolarmobile.data.repository.AuthRepository
+import com.example.smartsolarmobile.util.toFriendlyMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -176,7 +177,7 @@ class SignupViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = ex.message ?: "Failed to create Prosumer account."
+                            errorMessage = ex.toFriendlyMessage("Failed to create Prosumer account.")
                         )
                     }
                 }
