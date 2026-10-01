@@ -69,6 +69,7 @@ fun ProsumerHomeScreen(
     var showEditProfile by remember { mutableStateOf(false) }
     var activeReservationCount by remember { mutableStateOf<Int?>(null) }
     var totalBookingCount by remember { mutableStateOf<Int?>(null) }
+    var profilePictureUrl by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(session.roleId) {
         // Run in parallel, not sequentially - each check is a separate network round trip
@@ -92,6 +93,16 @@ fun ProsumerHomeScreen(
     }
 
     val displayName = session.fullName.ifBlank { session.nic ?: session.username }
+    val nicForProfile = session.nic ?: session.username
+
+    // Re-fetched every time the Edit Profile drawer closes (including on first load, when it's
+    // already closed) so a just-uploaded photo shows up on the hero immediately, not just after
+    // the next app restart.
+    LaunchedEffect(nicForProfile, showEditProfile) {
+        if (!showEditProfile) {
+            authRepository.getProsumerByNic(nicForProfile).onSuccess { profilePictureUrl = it.profilePictureUrl }
+        }
+    }
 
     val menuItems = buildList {
         if (canReserve) {
@@ -133,7 +144,8 @@ fun ProsumerHomeScreen(
                 displayName = displayName,
                 subtitle = "Prosumer · NIC ${session.nic ?: session.username}",
                 onLogout = onLogout,
-                onProfileClick = { showEditProfile = true }
+                onProfileClick = { showEditProfile = true },
+                profilePictureUrl = profilePictureUrl
             )
 
             Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {

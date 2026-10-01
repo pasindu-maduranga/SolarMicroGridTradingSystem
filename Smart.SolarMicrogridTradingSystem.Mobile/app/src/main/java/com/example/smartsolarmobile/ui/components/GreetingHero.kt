@@ -31,6 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.smartsolarmobile.R
 import java.util.Calendar
 
@@ -65,7 +66,8 @@ fun GreetingHero(
     displayName: String,
     subtitle: String,
     onLogout: () -> Unit,
-    onProfileClick: (() -> Unit)? = null
+    onProfileClick: (() -> Unit)? = null,
+    profilePictureUrl: String? = null
 ) {
     Box(
         modifier = Modifier
@@ -97,11 +99,20 @@ fun GreetingHero(
                     onClick = onProfileClick,
                     modifier = Modifier.align(Alignment.TopEnd).padding(top = 8.dp, end = 8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.AccountCircle,
-                        contentDescription = "Edit Profile",
-                        tint = Color.White
-                    )
+                    if (profilePictureUrl != null) {
+                        AsyncImage(
+                            model = profilePictureUrl,
+                            contentDescription = "Edit Profile",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(32.dp).clip(CircleShape)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = "Edit Profile",
+                            tint = Color.White
+                        )
+                    }
                 }
             } else {
                 IconButton(

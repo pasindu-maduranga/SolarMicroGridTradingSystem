@@ -11,11 +11,14 @@ import com.example.smartsolarmobile.data.api.models.ProsumerRegistrationRequest
 import com.example.smartsolarmobile.data.api.models.ReservationDto
 import com.example.smartsolarmobile.data.api.models.UpdateReservationRequest
 import com.example.smartsolarmobile.data.api.models.VerifyReservationRequest
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 import com.example.smartsolarmobile.data.api.models.UpdateProsumerRequest
@@ -41,6 +44,13 @@ interface ApiService {
     suspend fun updateProsumer(
         @Path("nic") nic: String,
         @Body request: UpdateProsumerRequest
+    ): Response<ApiResponse<ProsumerDto>>
+
+    @Multipart
+    @POST("api/prosumer/{nic}/photo")
+    suspend fun uploadProsumerPhoto(
+        @Path("nic") nic: String,
+        @Part file: MultipartBody.Part
     ): Response<ApiResponse<ProsumerDto>>
 
     @GET("api/permission/GetPermissionsByRoleAndScreen")

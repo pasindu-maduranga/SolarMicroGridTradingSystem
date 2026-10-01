@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Requests;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services.Interfaces
         Task<ApiResponse> GetProsumerByNicAsync(string nic);
         Task<ApiResponse> CreateProsumerAsync(CreateProsumerRequest request);
         Task<ApiResponse> UpdateProsumerAsync(string nic, UpdateProsumerRequest request);
+        Task<ApiResponse> UploadProsumerPhotoAsync(string nic, IFormFile file);
         Task<ApiResponse> DeleteProsumerAsync(string nic);
         Task<ApiResponse> ApproveProsumerAsync(string nic, ApproveProsumerRequest request);
         Task<ApiResponse> RejectProsumerAsync(string nic, RejectProsumerRequest request);

@@ -15,6 +15,9 @@ import com.example.smartsolarmobile.data.local.TokenManager
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.nio.charset.StandardCharsets
 
@@ -270,6 +273,33 @@ class AuthRepository(
             // Saving mutates server state, so unlike viewing there's no meaningful offline path -
             // give a clear reason instead of a generic network error message.
             Result.failure(Exception("You're offline - editing your profile needs an internet connection."))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /** Uploads a new profile photo - the server stores it in Cloudinary and returns the updated
+     *  profile with its new photo URL. Takes raw bytes (not a Uri/Context) so this repository
+     *  stays Android-UI-agnostic; the caller reads the picked image into [imageBytes] first. */
+    suspend fun uploadProsumerPhoto(nic: String, imageBytes: ByteArray, fileName: String, mimeType: String): Result<ProsumerDto> {
+        if (networkMonitor?.isOnline() == false) {
+            return Result.failure(Exception("You're offline - uploading a photo needs an internet connection."))
+        }
+        return try {
+            val requestBody = imageBytes.toRequestBody(mimeType.toMediaTypeOrNull())
+            val part = MultipartBody.Part.createFormData("file", fileName, requestBody)
+            val response = apiService.uploadProsumerPhoto(nic, part)
+            val body = response.body()
+            if (response.isSuccessful && body?.isSuccess == true && body.data != null) {
+                withContext(Dispatchers.IO) {
+                    localUserDatabase?.cacheProsumerProfile(nic, Gson().toJson(body.data))
+                }
+                Result.success(body.data)
+            } else {
+                Result.failure(Exception(body?.message ?: "Could not upload your photo."))
+            }
+        } catch (e: java.io.IOException) {
+            Result.failure(Exception("You're offline - uploading a photo needs an internet connection."))
         } catch (e: Exception) {
             Result.failure(e)
         }

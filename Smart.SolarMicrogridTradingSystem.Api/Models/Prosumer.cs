@@ -33,6 +33,9 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Models
         public double Latitude { get; set; }
         public double Longitude { get; set; }
 
+        /// <summary>Cloudinary URL of the Prosumer's profile photo, if they've uploaded one.</summary>
+        public string? ProfilePictureUrl { get; set; }
+
         public bool IsActive { get; set; } = true;
 
         /// <summary>

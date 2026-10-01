@@ -20,6 +20,8 @@ data class EditProfileUiState(
     val address: String = "",
     val latitude: Double? = null,
     val longitude: Double? = null,
+    val profilePictureUrl: String? = null,
+    val isUploadingPhoto: Boolean = false,
     val showLocationPicker: Boolean = false,
     val isSaving: Boolean = false,
     val saved: Boolean = false,
@@ -55,7 +57,8 @@ class EditProfileViewModel(
                             phoneNumber = prosumer.phoneNumber,
                             address = prosumer.address,
                             latitude = if (hasRealLocation) prosumer.latitude else null,
-                            longitude = if (hasRealLocation) prosumer.longitude else null
+                            longitude = if (hasRealLocation) prosumer.longitude else null,
+                            profilePictureUrl = prosumer.profilePictureUrl
                         )
                     }
                 },
@@ -75,6 +78,19 @@ class EditProfileViewModel(
 
     fun onLocationPicked(lat: Double, lng: Double) {
         _uiState.update { it.copy(latitude = lat, longitude = lng, showLocationPicker = false) }
+    }
+
+    /** Uploads a newly-picked photo immediately (not deferred to Save) - matches how the location
+     *  picker already behaves, and avoids losing the picked image if the Prosumer backs out of
+     *  the rest of the form without hitting Save. */
+    fun uploadPhoto(imageBytes: ByteArray, fileName: String, mimeType: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploadingPhoto = true, errorMessage = null) }
+            repository.uploadProsumerPhoto(nic, imageBytes, fileName, mimeType).fold(
+                onSuccess = { prosumer -> _uiState.update { it.copy(isUploadingPhoto = false, profilePictureUrl = prosumer.profilePictureUrl) } },
+                onFailure = { e -> _uiState.update { it.copy(isUploadingPhoto = false, errorMessage = e.toFriendlyMessage("Could not upload your photo.")) } }
+            )
+        }
     }
 
     fun save() {

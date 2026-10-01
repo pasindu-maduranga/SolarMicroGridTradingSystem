@@ -102,6 +102,9 @@ dependencies {
   implementation(libs.maps.compose)
   implementation(libs.zxing.embedded)
   implementation(libs.accompanist.permissions)
+
+  // Async image loading (profile photos from Cloudinary URLs)
+  implementation("io.coil-kt:coil-compose:2.6.0")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
