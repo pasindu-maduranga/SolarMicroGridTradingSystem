@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.smartsolarmobile.data.api.models.ReservationDto
 import com.example.smartsolarmobile.data.repository.ReservationRepository
+import com.example.smartsolarmobile.util.toFriendlyMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,10 +44,10 @@ class OperatorBookingsViewModel(
                     }
                     repository.getReservationsByNode(myNode.nodeId).fold(
                         onSuccess = { list -> _uiState.update { it.copy(isLoading = false, nodeName = myNode.name, bookings = list) } },
-                        onFailure = { e -> _uiState.update { it.copy(isLoading = false, errorMessage = e.message) } }
+                        onFailure = { e -> _uiState.update { it.copy(isLoading = false, errorMessage = e.toFriendlyMessage()) } }
                     )
                 },
-                onFailure = { e -> _uiState.update { it.copy(isLoading = false, errorMessage = e.message) } }
+                onFailure = { e -> _uiState.update { it.copy(isLoading = false, errorMessage = e.toFriendlyMessage()) } }
             )
         }
     }

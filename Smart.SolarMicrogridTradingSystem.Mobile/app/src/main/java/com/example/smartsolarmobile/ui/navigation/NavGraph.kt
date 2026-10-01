@@ -5,9 +5,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smartsolarmobile.data.api.models.UserRole
 import com.example.smartsolarmobile.data.api.models.UserSession
+import com.example.smartsolarmobile.data.local.LocalUserDatabase
+import com.example.smartsolarmobile.data.local.NetworkMonitor
 import com.example.smartsolarmobile.data.repository.AuthRepository
 import com.example.smartsolarmobile.theme.AppThemeVariant
 import com.example.smartsolarmobile.theme.SmartSolarMobileTheme
@@ -37,7 +40,8 @@ import com.example.smartsolarmobile.ui.reservation.TransactionHistoryViewModelFa
 
 @Composable
 fun AppNavGraph(
-    authRepository: AuthRepository
+    authRepository: AuthRepository,
+    networkMonitor: NetworkMonitor
 ) {
     var currentScreen by remember {
         mutableStateOf<Screen>(
@@ -69,6 +73,7 @@ fun AppNavGraph(
             currentScreen = currentScreen,
             activeSession = activeSession,
             authRepository = authRepository,
+            networkMonitor = networkMonitor,
             onScreenChange = { currentScreen = it },
             onSessionChange = { activeSession = it }
         )
@@ -80,10 +85,18 @@ private fun NavGraphContent(
     currentScreen: Screen,
     activeSession: UserSession?,
     authRepository: AuthRepository,
+    networkMonitor: NetworkMonitor,
     onScreenChange: (Screen) -> Unit,
     onSessionChange: (UserSession?) -> Unit
 ) {
-    val reservationRepository = remember { ReservationRepository() }
+    val context = LocalContext.current
+    // One shared LocalUserDatabase/ReservationRepository for the whole nav graph - each Home
+    // screen used to create its own, opening a separate SQLite connection per instance, which
+    // showed up as "SQLiteConnectionPool leaked" warnings and synchronous disk I/O jank.
+    val localUserDatabase = remember { LocalUserDatabase(context) }
+    val reservationRepository = remember {
+        ReservationRepository(localUserDatabase = localUserDatabase, networkMonitor = networkMonitor)
+    }
 
     when (currentScreen) {
         Screen.Login -> {
@@ -127,6 +140,7 @@ private fun NavGraphContent(
             activeSession?.let { session ->
                 GridOperatorHomeScreen(
                     session = session,
+                    reservationRepository = reservationRepository,
                     onLogout = {
                         authRepository.logout()
                         onSessionChange(null)
@@ -147,6 +161,7 @@ private fun NavGraphContent(
                 ProsumerHomeScreen(
                     session = session,
                     authRepository = authRepository,
+                    reservationRepository = reservationRepository,
                     onLogout = {
                         authRepository.logout()
                         onSessionChange(null)

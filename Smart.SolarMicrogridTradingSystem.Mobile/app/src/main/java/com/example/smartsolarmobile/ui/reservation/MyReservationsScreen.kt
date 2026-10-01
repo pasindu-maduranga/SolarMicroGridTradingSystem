@@ -28,7 +28,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -50,6 +49,7 @@ import com.example.smartsolarmobile.R
 import com.example.smartsolarmobile.data.api.models.ReservationDto
 import com.example.smartsolarmobile.data.repository.parseIsoUtc
 import com.example.smartsolarmobile.data.repository.toFriendlyString
+import com.example.smartsolarmobile.ui.components.AppSnackbarHost
 import com.example.smartsolarmobile.ui.components.QrCodeImage
 import com.example.smartsolarmobile.ui.components.rememberDateTimePickerLauncher
 
@@ -91,7 +91,7 @@ fun MyReservationsScreen(
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { AppSnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             TabRow(selectedTabIndex = if (uiState.selectedTab == ReservationTab.PENDING) 0 else 1) {

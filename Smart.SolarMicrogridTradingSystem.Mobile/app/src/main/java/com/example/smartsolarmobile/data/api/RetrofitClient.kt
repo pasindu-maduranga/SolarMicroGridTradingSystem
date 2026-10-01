@@ -42,8 +42,12 @@ object RetrofitClient {
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(authInterceptor)
         .addInterceptor(loggingInterceptor)
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
+        // Short timeouts matter here: NetworkMonitor's pre-check can't always tell "online" from
+        // "device thinks it's online but the server is actually unreachable" (e.g. some emulator
+        // network configs), so a slow/absent connection still has to fail fast enough for the
+        // offline SQLite fallback to feel instant rather than making the screen look frozen.
+        .connectTimeout(6, TimeUnit.SECONDS)
+        .readTimeout(8, TimeUnit.SECONDS)
         .build()
 
     private fun createRetrofit(): Retrofit {

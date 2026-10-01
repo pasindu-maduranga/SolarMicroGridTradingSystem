@@ -10,7 +10,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services.Interfaces
         Task<ApiResponse> GetPendingProsumersAsync();
         Task<ApiResponse> GetProsumerByNicAsync(string nic);
         Task<ApiResponse> CreateProsumerAsync(CreateProsumerRequest request);
-        Task<ApiResponse> UpdateProsumerAsync(string nic, UpdateProsumerRequest request, bool isBackofficeUser);
+        Task<ApiResponse> UpdateProsumerAsync(string nic, UpdateProsumerRequest request);
         Task<ApiResponse> DeleteProsumerAsync(string nic);
         Task<ApiResponse> ApproveProsumerAsync(string nic, ApproveProsumerRequest request);
         Task<ApiResponse> RejectProsumerAsync(string nic, RejectProsumerRequest request);

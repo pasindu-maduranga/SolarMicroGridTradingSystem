@@ -39,7 +39,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -59,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import com.example.smartsolarmobile.data.api.models.NodeDto
 import com.example.smartsolarmobile.data.repository.parseIsoUtc
 import com.example.smartsolarmobile.data.repository.toFriendlyString
+import com.example.smartsolarmobile.ui.components.AppSnackbarHost
 import com.example.smartsolarmobile.ui.components.QrCodeImage
 import com.example.smartsolarmobile.ui.components.rememberDateTimePickerLauncher
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -144,7 +144,7 @@ fun ReserveSlotScreen(
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { AppSnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             if (!locationPermission.status.isGranted) {

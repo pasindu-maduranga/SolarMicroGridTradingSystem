@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.example.smartsolarmobile.data.local.LocalUserDatabase
+import com.example.smartsolarmobile.data.local.NetworkMonitor
 import com.example.smartsolarmobile.data.local.TokenManager
 import com.example.smartsolarmobile.data.repository.AuthRepository
 import com.example.smartsolarmobile.theme.SmartSolarMobileTheme
@@ -16,11 +18,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val tokenManager = TokenManager(applicationContext)
-        val authRepository = AuthRepository(tokenManager = tokenManager)
+        val localUserDatabase = LocalUserDatabase(applicationContext)
+        val networkMonitor = NetworkMonitor(applicationContext)
+        val authRepository = AuthRepository(
+            tokenManager = tokenManager,
+            localUserDatabase = localUserDatabase,
+            networkMonitor = networkMonitor
+        )
 
         setContent {
             SmartSolarMobileTheme {
-                AppNavGraph(authRepository = authRepository)
+                AppNavGraph(authRepository = authRepository, networkMonitor = networkMonitor)
             }
         }
     }

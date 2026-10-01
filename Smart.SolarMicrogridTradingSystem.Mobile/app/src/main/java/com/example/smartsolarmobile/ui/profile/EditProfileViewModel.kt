@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.smartsolarmobile.data.repository.AuthRepository
+import com.example.smartsolarmobile.util.toFriendlyMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,7 +59,7 @@ class EditProfileViewModel(
                         )
                     }
                 },
-                onFailure = { e -> _uiState.update { it.copy(isLoading = false, errorMessage = e.message) } }
+                onFailure = { e -> _uiState.update { it.copy(isLoading = false, errorMessage = e.toFriendlyMessage()) } }
             )
         }
     }
@@ -85,7 +86,7 @@ class EditProfileViewModel(
                 isActive = true, latitude = s.latitude, longitude = s.longitude
             ).fold(
                 onSuccess = { _uiState.update { it.copy(isSaving = false, saved = true) } },
-                onFailure = { e -> _uiState.update { it.copy(isSaving = false, errorMessage = e.message ?: "Could not save your profile.") } }
+                onFailure = { e -> _uiState.update { it.copy(isSaving = false, errorMessage = e.toFriendlyMessage("Could not save your profile.")) } }
             )
         }
     }
@@ -106,7 +107,7 @@ class EditProfileViewModel(
                     repository.logout()
                     _uiState.update { it.copy(isSaving = false, deactivated = true) }
                 },
-                onFailure = { e -> _uiState.update { it.copy(isSaving = false, errorMessage = e.message ?: "Could not deactivate your account.") } }
+                onFailure = { e -> _uiState.update { it.copy(isSaving = false, errorMessage = e.toFriendlyMessage("Could not deactivate your account.")) } }
             )
         }
     }

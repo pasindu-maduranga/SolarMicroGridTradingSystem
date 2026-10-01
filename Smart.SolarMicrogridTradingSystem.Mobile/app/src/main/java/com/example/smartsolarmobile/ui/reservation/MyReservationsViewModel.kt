@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.smartsolarmobile.data.api.models.ReservationDto
 import com.example.smartsolarmobile.data.repository.ReservationRepository
 import com.example.smartsolarmobile.data.repository.parseIsoUtc
+import com.example.smartsolarmobile.util.toFriendlyMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,7 +50,7 @@ class MyReservationsViewModel(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             repository.getMyReservations(prosumerNic).fold(
                 onSuccess = { list -> _uiState.update { it.copy(isLoading = false, reservations = list) } },
-                onFailure = { e -> _uiState.update { it.copy(isLoading = false, errorMessage = e.message) } }
+                onFailure = { e -> _uiState.update { it.copy(isLoading = false, errorMessage = e.toFriendlyMessage()) } }
             )
         }
     }
@@ -84,7 +85,7 @@ class MyReservationsViewModel(
             _uiState.update { it.copy(reschedulingReservation = null) }
             repository.updateReservation(reservation.reservationId, prosumerNic, null, newDate).fold(
                 onSuccess = { load() },
-                onFailure = { e -> _uiState.update { it.copy(errorMessage = e.message) } }
+                onFailure = { e -> _uiState.update { it.copy(errorMessage = e.toFriendlyMessage()) } }
             )
         }
     }
@@ -93,7 +94,7 @@ class MyReservationsViewModel(
         viewModelScope.launch {
             repository.cancelReservation(reservation.reservationId, prosumerNic).fold(
                 onSuccess = { load() },
-                onFailure = { e -> _uiState.update { it.copy(errorMessage = e.message) } }
+                onFailure = { e -> _uiState.update { it.copy(errorMessage = e.toFriendlyMessage()) } }
             )
         }
     }

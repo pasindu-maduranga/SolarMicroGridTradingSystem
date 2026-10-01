@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smartsolarmobile.data.api.models.ReservationDto
 import com.example.smartsolarmobile.data.repository.ReservationRepository
+import com.example.smartsolarmobile.util.toFriendlyMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,7 +40,7 @@ class VerifyReservationViewModel(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             repository.verifyReservation(qrToken, verifiedBy, energyDeliveredKwh).fold(
                 onSuccess = { reservation -> _uiState.update { it.copy(isLoading = false, scannedQrToken = null, verifiedReservation = reservation) } },
-                onFailure = { e -> _uiState.update { it.copy(isLoading = false, scannedQrToken = null, errorMessage = e.message ?: "Invalid QR code.") } }
+                onFailure = { e -> _uiState.update { it.copy(isLoading = false, scannedQrToken = null, errorMessage = e.toFriendlyMessage("Invalid QR code.")) } }
             )
         }
     }

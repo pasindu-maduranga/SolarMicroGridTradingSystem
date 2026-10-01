@@ -16,6 +16,8 @@ export default function ProsumerListing() {
   const [search, setSearch] = useState('');
   const [canManage, setCanManage] = useState(false);
 
+  const handleAdd = () => navigate('/app/prosumers/addEdit');
+
   useEffect(() => {
     trackPromise(getPermissions());
     trackPromise(loadData());
@@ -37,9 +39,9 @@ export default function ProsumerListing() {
     setProsumers(result || []);
   }
 
-  // Backoffice/Super Admin can only flip a Prosumer's active status here - their bio data
-  // (name, email, phone, address, location) is self-managed from the mobile app's Edit Profile
-  // screen, not editable by staff. Re-sending the unchanged fields alongside the flipped
+  // Staff can create a Prosumer account (Add Prosumer) and flip its active status here, but not
+  // edit bio data (name, email, phone, address, location) - that stays self-managed from the
+  // mobile app's Edit Profile screen. Re-sending the unchanged fields alongside the flipped
   // isActive flag is just satisfying the API's required-fields contract, not an edit.
   async function handleToggleActive(prosumer) {
     const response = await services.updateProsumer({ ...prosumer, isActive: !prosumer.isActive });
@@ -79,12 +81,24 @@ export default function ProsumerListing() {
               View Prosumer accounts and deactivate/reactivate them (NIC as primary key). Profile details are self-managed by each Prosumer from the mobile app.
             </p>
           </div>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by NIC, name or email…"
-            className="w-64 border border-[#E6DDC4] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#2F6B45]"
-          />
+          <div className="flex items-center gap-3">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by NIC, name or email…"
+              className="w-64 border border-[#E6DDC4] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#2F6B45]"
+            />
+            {canManage && (
+              <button
+                type="button"
+                onClick={handleAdd}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#2F6B45] text-white text-sm font-semibold hover:bg-[#265939] transition-colors whitespace-nowrap"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                Add Prosumer
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="overflow-x-auto">

@@ -2,12 +2,18 @@ package com.example.smartsolarmobile.data.repository
 
 import com.example.smartsolarmobile.data.api.ApiService
 import com.example.smartsolarmobile.data.api.RetrofitClient
+import com.example.smartsolarmobile.data.local.LocalUserDatabase
+import com.example.smartsolarmobile.data.local.NetworkMonitor
 import com.example.smartsolarmobile.data.api.models.CancelReservationRequest
 import com.example.smartsolarmobile.data.api.models.CreateReservationRequest
 import com.example.smartsolarmobile.data.api.models.NodeDto
 import com.example.smartsolarmobile.data.api.models.ReservationDto
 import com.example.smartsolarmobile.data.api.models.UpdateReservationRequest
 import com.example.smartsolarmobile.data.api.models.VerifyReservationRequest
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -55,31 +61,77 @@ fun parseIsoUtc(value: String?): Date? {
 fun Date.toFriendlyString(): String = formatterFor("dd MMM yyyy, hh:mm a", timeZoneId = null).format(this)
 
 class ReservationRepository(
-    private val apiService: ApiService = RetrofitClient.apiService
+    private val apiService: ApiService = RetrofitClient.apiService,
+    private val localUserDatabase: LocalUserDatabase? = null,
+    private val networkMonitor: NetworkMonitor? = null
 ) {
     /** True if the given role has VIEW (or ADD/EDIT) access to screenCode, per the same
-     *  Role Permission data the web Backoffice manages. Fails open to false on any error. */
+     *  Role Permission data the web Backoffice manages. On success, the result is cached locally;
+     *  if the live call fails (e.g. no internet), falls back to that cache instead of hiding the
+     *  menu outright - so the app keeps working, with slightly-stale data, when offline. */
     suspend fun hasAccess(roleId: String, screenCode: String): Boolean {
+        fun matches(codes: List<String>) = codes.any { it == "VIEW$screenCode" || it == "ADDEDIT$screenCode" }
+        if (networkMonitor?.isOnline() == false) {
+            val cached = withContext(Dispatchers.IO) {
+                localUserDatabase?.getCachedPermissionCodes(roleId, screenCode).orEmpty()
+            }
+            return matches(cached)
+        }
         return try {
             val response = apiService.getPermissionsByRoleAndScreen(roleId, screenCode)
-            val codes = response.body()?.data.orEmpty()
-            codes.any { it.permissionCode == "VIEW$screenCode" || it.permissionCode == "ADDEDIT$screenCode" }
+            // A non-2xx response (e.g. 401 from an offline-login placeholder token) must be
+            // treated the same as no connectivity, not as "server says no permissions" - otherwise
+            // it would overwrite a perfectly good cache with an empty list.
+            if (!response.isSuccessful) throw java.io.IOException("Permission check failed: HTTP ${response.code()}")
+            val codes = response.body()?.data.orEmpty().map { it.permissionCode }
+            // SQLiteOpenHelper does disk I/O synchronously - without this, LaunchedEffect
+            // (which resumes on Dispatchers.Main) would block the UI thread on every permission check.
+            withContext(Dispatchers.IO) { localUserDatabase?.cachePermissions(roleId, screenCode, codes) }
+            matches(codes)
         } catch (e: Exception) {
-            false
+            val cached = withContext(Dispatchers.IO) {
+                localUserDatabase?.getCachedPermissionCodes(roleId, screenCode).orEmpty()
+            }
+            matches(cached)
         }
     }
 
+    /** Fetches every node (used to find "my node" client-side by Grid Operators/Backoffice, and
+     *  as the map/list source for Prosumers). Cached so My Node Slots, Operator Bookings and
+     *  Transaction History (which all start from this same list) still work offline. */
     suspend fun getAllNodes(): Result<List<NodeDto>> {
+        val cacheKey = "all_nodes"
+        if (networkMonitor?.isOnline() == false) {
+            return cachedListOrFailure(cacheKey, object : TypeToken<List<NodeDto>>() {})
+        }
         return try {
             val response = apiService.getAllNodes()
             val body = response.body()
             if (response.isSuccessful && body?.isSuccess == true) {
-                Result.success(body.data.orEmpty())
+                val nodes = body.data.orEmpty()
+                withContext(Dispatchers.IO) { localUserDatabase?.cacheJson(cacheKey, Gson().toJson(nodes)) }
+                Result.success(nodes)
             } else {
                 Result.failure(Exception(body?.message ?: "Failed to load nodes."))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            cachedListOrFailure(cacheKey, object : TypeToken<List<NodeDto>>() {}, e)
+        }
+    }
+
+    private suspend fun <T> cachedListOrFailure(
+        key: String,
+        typeToken: TypeToken<List<T>>,
+        originalError: Throwable? = null
+    ): Result<List<T>> {
+        val json = withContext(Dispatchers.IO) { localUserDatabase?.getCachedJson(key) }
+        val list: List<T>? = json?.let {
+            try { Gson().fromJson<List<T>>(it, typeToken.type) } catch (parseError: Exception) { null }
+        }
+        return if (list != null) {
+            Result.success(list)
+        } else {
+            Result.failure(originalError ?: Exception("You're offline and this hasn't been loaded on this device before."))
         }
     }
 
@@ -115,31 +167,47 @@ class ReservationRepository(
         }
     }
 
+    /** Cached so My Reservations and Earnings (both Prosumer-side, both built from this list)
+     *  still show the last-known data offline. */
     suspend fun getMyReservations(nic: String): Result<List<ReservationDto>> {
+        val cacheKey = "myReservations:$nic"
+        if (networkMonitor?.isOnline() == false) {
+            return cachedListOrFailure(cacheKey, object : TypeToken<List<ReservationDto>>() {})
+        }
         return try {
             val response = apiService.getMyReservations(nic)
             val body = response.body()
             if (response.isSuccessful && body?.isSuccess == true) {
-                Result.success(body.data.orEmpty())
+                val list = body.data.orEmpty()
+                withContext(Dispatchers.IO) { localUserDatabase?.cacheJson(cacheKey, Gson().toJson(list)) }
+                Result.success(list)
             } else {
                 Result.failure(Exception(body?.message ?: "Failed to load reservations."))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            cachedListOrFailure(cacheKey, object : TypeToken<List<ReservationDto>>() {}, e)
         }
     }
 
+    /** Cached so Operator Bookings and Transaction History (both Grid Operator-side, both built
+     *  from this list) still show the last-known data offline. */
     suspend fun getReservationsByNode(nodeId: String): Result<List<ReservationDto>> {
+        val cacheKey = "reservationsByNode:$nodeId"
+        if (networkMonitor?.isOnline() == false) {
+            return cachedListOrFailure(cacheKey, object : TypeToken<List<ReservationDto>>() {})
+        }
         return try {
             val response = apiService.getReservationsByNode(nodeId)
             val body = response.body()
             if (response.isSuccessful && body?.isSuccess == true) {
-                Result.success(body.data.orEmpty())
+                val list = body.data.orEmpty()
+                withContext(Dispatchers.IO) { localUserDatabase?.cacheJson(cacheKey, Gson().toJson(list)) }
+                Result.success(list)
             } else {
                 Result.failure(Exception(body?.message ?: "Failed to load bookings."))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            cachedListOrFailure(cacheKey, object : TypeToken<List<ReservationDto>>() {}, e)
         }
     }
 

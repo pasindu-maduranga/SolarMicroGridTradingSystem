@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Requests;
 using Smart.SolarMicrogridTradingSystem.Api.Services.Interfaces;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
@@ -50,8 +49,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
         [Route("{nic}")]
         public async Task<ApiResponse> Put(string nic, [FromBody] UpdateProsumerRequest request)
         {
-            bool isBackofficeUser = User.Claims.Any(c => c.Type == "roleName" && c.Value.Equals("Backoffice", System.StringComparison.OrdinalIgnoreCase));
-            return await prosumerService.UpdateProsumerAsync(nic, request, isBackofficeUser);
+            return await prosumerService.UpdateProsumerAsync(nic, request);
         }
 
         [HttpDelete]

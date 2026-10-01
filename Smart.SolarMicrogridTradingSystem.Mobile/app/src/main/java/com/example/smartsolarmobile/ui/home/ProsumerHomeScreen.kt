@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import kotlinx.coroutines.async
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -37,6 +38,7 @@ import com.example.smartsolarmobile.R
 import com.example.smartsolarmobile.data.api.models.UserSession
 import com.example.smartsolarmobile.data.repository.AuthRepository
 import com.example.smartsolarmobile.data.repository.ReservationRepository
+import com.example.smartsolarmobile.ui.components.DashboardStatCard
 import com.example.smartsolarmobile.ui.components.GreetingHero
 import com.example.smartsolarmobile.ui.components.MenuGridTile
 import com.example.smartsolarmobile.ui.components.SideDrawerOverlay
@@ -55,21 +57,38 @@ private data class ProsumerMenuItem(
 fun ProsumerHomeScreen(
     session: UserSession,
     authRepository: AuthRepository,
+    reservationRepository: ReservationRepository,
     onLogout: () -> Unit,
     onNavigateToReserve: () -> Unit,
     onNavigateToMyReservations: () -> Unit,
     onNavigateToEarnings: () -> Unit
 ) {
-    val reservationRepository = remember { ReservationRepository() }
     var canReserve by remember { mutableStateOf(false) }
     var canViewReservations by remember { mutableStateOf(false) }
     var canViewEarnings by remember { mutableStateOf(false) }
     var showEditProfile by remember { mutableStateOf(false) }
+    var activeReservationCount by remember { mutableStateOf<Int?>(null) }
+    var totalBookingCount by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(session.roleId) {
-        canReserve = reservationRepository.hasAccess(session.roleId, "RESERVESLOT")
-        canViewReservations = reservationRepository.hasAccess(session.roleId, "MYRESERVATIONS")
-        canViewEarnings = reservationRepository.hasAccess(session.roleId, "EARNINGS")
+        // Run in parallel, not sequentially - each check is a separate network round trip
+        // (or timeout), and awaiting them one at a time made the total wait add up.
+        val reserve = async { reservationRepository.hasAccess(session.roleId, "RESERVESLOT") }
+        val reservations = async { reservationRepository.hasAccess(session.roleId, "MYRESERVATIONS") }
+        val earnings = async { reservationRepository.hasAccess(session.roleId, "EARNINGS") }
+        canReserve = reserve.await()
+        canViewReservations = reservations.await()
+        canViewEarnings = earnings.await()
+    }
+
+    val nicForStats = session.nic ?: session.username
+    LaunchedEffect(canViewReservations, nicForStats) {
+        if (canViewReservations) {
+            reservationRepository.getMyReservations(nicForStats).onSuccess { list ->
+                activeReservationCount = list.count { it.status == "Active" }
+                totalBookingCount = list.size
+            }
+        }
     }
 
     val displayName = session.fullName.ifBlank { session.nic ?: session.username }
@@ -118,6 +137,25 @@ fun ProsumerHomeScreen(
             )
 
             Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
+                if (canViewReservations) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        DashboardStatCard(
+                            label = "Active Reservations",
+                            value = activeReservationCount,
+                            modifier = Modifier.weight(1f)
+                        )
+                        DashboardStatCard(
+                            label = "Total Bookings",
+                            value = totalBookingCount,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
                 Text(
                     text = "What would you like to do?",
                     fontSize = 16.sp,
