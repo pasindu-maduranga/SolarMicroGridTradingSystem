@@ -1,3 +1,8 @@
+/*
+ * File: PermissionService.cs
+ * Description: Contains the implementation for PermissionService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Smart.SolarMicrogridTradingSystem.Api.Models;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Services.Interfaces;
@@ -21,6 +26,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             this.responseFactory = responseFactory;
         }
 
+        // Executes the GetPermissionsByRoleAndScreenAsync functionality.
         public async Task<ApiResponse> GetPermissionsByRoleAndScreenAsync(string roleId, string screenCode)
         {
             try

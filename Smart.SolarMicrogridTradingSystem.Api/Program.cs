@@ -1,3 +1,8 @@
+/*
+ * File: Program.cs
+ * Description: Contains the implementation for Program.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;

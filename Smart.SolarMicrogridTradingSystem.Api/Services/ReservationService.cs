@@ -1,3 +1,8 @@
+/*
+ * File: ReservationService.cs
+ * Description: Contains the implementation for ReservationService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using MongoDB.Driver;
 using Smart.SolarMicrogridTradingSystem.Api.Models;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
@@ -24,6 +29,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             this.responseFactory = responseFactory;
         }
 
+        // Executes the CreateReservationAsync functionality.
         public async Task<ApiResponse> CreateReservationAsync(CreateReservationRequest request)
         {
             try
@@ -99,6 +105,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the GetAllReservationsAsync functionality.
         public async Task<ApiResponse> GetAllReservationsAsync()
         {
             try
@@ -112,6 +119,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the GetReservationsByProsumerAsync functionality.
         public async Task<ApiResponse> GetReservationsByProsumerAsync(string nic)
         {
             try
@@ -144,6 +152,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the VerifyReservationAsync functionality.
         public async Task<ApiResponse> VerifyReservationAsync(VerifyReservationRequest request)
         {
             try
@@ -184,6 +193,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the UpdateReservationAsync functionality.
         public async Task<ApiResponse> UpdateReservationAsync(string id, UpdateReservationRequest request)
         {
             try
@@ -267,6 +277,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the CancelReservationAsync functionality.
         public async Task<ApiResponse> CancelReservationAsync(string id, CancelReservationRequest request)
         {
             try
@@ -304,6 +315,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the HasActiveReservationsForNodeAsync functionality.
         public async Task<bool> HasActiveReservationsForNodeAsync(string nodeId)
         {
             return await reservations.Find(x => x.NodeId == nodeId && x.Status == ReservationStatus.Active).AnyAsync();
@@ -378,6 +390,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             return null;
         }
 
+        // Executes the ToSummary functionality.
         private static object ToSummary(Reservation reservation) => new
         {
             reservationId = reservation.Id,

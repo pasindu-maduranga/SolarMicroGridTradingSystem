@@ -1,3 +1,8 @@
+/*
+ * File: IReportingService.cs
+ * Description: Contains the implementation for IReportingService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using System.Threading.Tasks;
 

@@ -1,3 +1,8 @@
+/*
+ * File: MenuController.cs
+ * Description: Contains the implementation for MenuController.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Microsoft.AspNetCore.Mvc;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Requests;
@@ -20,6 +25,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpGet]
         [Route("GetAllMenuDetails")]
+        // Executes the GetAllMenuDetails functionality.
         public async Task<ApiResponse> GetAllMenuDetails()
         {
             return await menuService.GetAllMenuDetailsAsync();
@@ -27,6 +33,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpPost]
         [Route("SaveMenuDetails")]
+        // Executes the SaveMenuDetails functionality.
         public async Task<ApiResponse> SaveMenuDetails([FromBody] MenuRequest request)
         {
             return await menuService.SaveMenuDetailsAsync(request);
@@ -34,6 +41,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpPut]
         [Route("UpdateMenuDetails/{id}")]
+        // Executes the UpdateMenuDetails functionality.
         public async Task<ApiResponse> UpdateMenuDetails(string id, [FromBody] MenuRequest request)
         {
             return await menuService.UpdateMenuDetailsAsync(id, request);
@@ -41,6 +49,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpGet]
         [Route("GetAllScreenDetails")]
+        // Executes the GetAllScreenDetails functionality.
         public async Task<ApiResponse> GetAllScreenDetails()
         {
             return await menuService.GetAllScreenDetailsAsync();
@@ -48,6 +57,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpPost]
         [Route("SaveScreenDetails")]
+        // Executes the SaveScreenDetails functionality.
         public async Task<ApiResponse> SaveScreenDetails([FromBody] List<ScreenRequest> requests)
         {
             return await menuService.SaveScreenDetailsAsync(requests);
@@ -55,6 +65,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpPut]
         [Route("UpdateScreenDetails/{id}")]
+        // Executes the UpdateScreenDetails functionality.
         public async Task<ApiResponse> UpdateScreenDetails(string id, [FromBody] ScreenRequest request)
         {
             return await menuService.UpdateScreenDetailsAsync(id, request);
@@ -62,6 +73,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpDelete]
         [Route("{id}")]
+        // Executes the Delete functionality.
         public async Task<ApiResponse> Delete(string id)
         {
             return await menuService.DeleteMenuNodeAsync(id);

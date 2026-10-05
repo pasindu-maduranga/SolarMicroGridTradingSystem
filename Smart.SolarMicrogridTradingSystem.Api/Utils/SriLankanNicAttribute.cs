@@ -1,3 +1,8 @@
+/*
+ * File: SriLankanNicAttribute.cs
+ * Description: Contains the implementation for SriLankanNicAttribute.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 

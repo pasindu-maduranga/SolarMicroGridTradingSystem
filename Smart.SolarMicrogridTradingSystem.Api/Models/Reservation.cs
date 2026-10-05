@@ -1,3 +1,8 @@
+/*
+ * File: Reservation.cs
+ * Description: Contains the implementation for Reservation.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System;

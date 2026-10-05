@@ -1,3 +1,8 @@
+/*
+ * File: RolePermissionService.cs
+ * Description: Contains the implementation for RolePermissionService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using MongoDB.Driver;
 using Smart.SolarMicrogridTradingSystem.Api.Models;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
@@ -23,9 +28,11 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             this.responseFactory = responseFactory;
         }
 
+        // Executes the GetByRoleIdAsync functionality.
         public async Task<List<RolePermission>> GetByRoleIdAsync(string roleId) =>
-            await rolePermissions.Find(x => x.RoleId == roleId).ToListAsync();
+                    await rolePermissions.Find(x => x.RoleId == roleId).ToListAsync();
 
+        // Executes the SaveRolePermissionsAsync functionality.
         public async Task SaveRolePermissionsAsync(string roleId, List<RolePermission> permissions)
         {
             await rolePermissions.DeleteManyAsync(x => x.RoleId == roleId);
@@ -35,6 +42,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the GetPermissionByRoleIdAsync functionality.
         public async Task<ApiResponse> GetPermissionByRoleIdAsync(string loggedRoleId, string assigningRoleId)
         {
             try
@@ -76,6 +84,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the SaveRolePermissionAsync functionality.
         public async Task<ApiResponse> SaveRolePermissionAsync(SaveRolePermissionRequest request)
         {
             try

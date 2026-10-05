@@ -1,3 +1,8 @@
+/*
+ * File: ProsumerRequests.cs
+ * Description: Contains the implementation for ProsumerRequests.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using System.ComponentModel.DataAnnotations;
 using Smart.SolarMicrogridTradingSystem.Api.Utils;
 
@@ -8,23 +13,23 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Models.Requests
         [Required]
         [SriLankanNic]
         public string NIC { get; set; } = null!;
-        
+
         [Required]
         public string FirstName { get; set; } = null!;
-        
+
         [Required]
         public string LastName { get; set; } = null!;
-        
+
         [Required]
         [EmailAddress]
         public string Email { get; set; } = null!;
-        
+
         [Required]
         public string Password { get; set; } = null!;
-        
+
         [Required]
         public string PhoneNumber { get; set; } = null!;
-        
+
         [Required]
         public string Address { get; set; } = null!;
 
@@ -42,17 +47,17 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Models.Requests
     {
         [Required]
         public string FirstName { get; set; } = null!;
-        
+
         [Required]
         public string LastName { get; set; } = null!;
-        
+
         [Required]
         [EmailAddress]
         public string Email { get; set; } = null!;
-        
+
         [Required]
         public string PhoneNumber { get; set; } = null!;
-        
+
         [Required]
         public string Address { get; set; } = null!;
 

@@ -1,3 +1,8 @@
+/*
+ * File: IReservationService.cs
+ * Description: Contains the implementation for IReservationService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Requests;
 using System.Threading.Tasks;

@@ -1,3 +1,8 @@
+/*
+ * File: Node.cs
+ * Description: Contains the implementation for Node.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System;

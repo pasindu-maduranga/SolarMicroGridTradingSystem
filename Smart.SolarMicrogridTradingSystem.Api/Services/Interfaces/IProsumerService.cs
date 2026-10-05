@@ -1,3 +1,8 @@
+/*
+ * File: IProsumerService.cs
+ * Description: Contains the implementation for IProsumerService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Microsoft.AspNetCore.Http;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Requests;
