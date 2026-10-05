@@ -1,3 +1,6 @@
+#Git Link - https://github.com/pasindu-maduranga/SolarMicroGridTradingSystem.git
+#Video Link - 
+
 # Smart Solar Microgrid Trading System
 
 A peer-to-peer solar energy trading platform built for the SE4040 (Enterprise Application Development) group assignment at SLIIT. Prosumers generate and sell surplus solar energy through community Microgrid Nodes; Grid Operators manage nodes and approve transactions; Backoffice staff manage the platform itself. The system follows a FAT-service architecture: all business logic lives in the Web API, and every client (web app, and the planned Android app) is a thin presentation layer that only calls the API.
