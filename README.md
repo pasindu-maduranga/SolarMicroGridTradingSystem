@@ -1,5 +1,6 @@
 #Git Link - https://github.com/pasindu-maduranga/SolarMicroGridTradingSystem.git
-#Video Link - 
+
+#Video Link - https://mysliit-my.sharepoint.com/:v:/g/personal/it22194176_my_sliit_lk/IQCix7aL0ChwQaGRirYwmtYSAWWiw0zamQ3UkKVRkY4U6os?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=N9l94X
 
 # Smart Solar Microgrid Trading System
 
