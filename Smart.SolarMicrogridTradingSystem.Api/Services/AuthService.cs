@@ -1,3 +1,8 @@
+/*
+ * File: AuthService.cs
+ * Description: Contains the implementation for AuthService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
@@ -31,6 +36,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             this.responseFactory = responseFactory;
         }
 
+        // Executes the LoginAsync functionality.
         public async Task<ApiResponse> LoginAsync(LoginDto login)
         {
             try
@@ -98,6 +104,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the GenerateToken functionality.
         private string GenerateToken(string userName, string subjectId, string roleId, int roleLevel, string roleName, string fullName)
         {
             var tokenHandler = new JwtSecurityTokenHandler();

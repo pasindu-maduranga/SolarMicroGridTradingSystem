@@ -1,3 +1,8 @@
+/*
+ * File: Prosumer.cs
+ * Description: Contains the implementation for Prosumer.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System;
@@ -18,16 +23,16 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Models
         /// </summary>
         [BsonId]
         public string NIC { get; set; } = null!;
-        
+
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
         public string Email { get; set; } = null!;
-        
+
         /// <summary>
         /// Password hash for local mobile app authentication / server verification
         /// </summary>
         public string PasswordHash { get; set; } = null!;
-        
+
         public string PhoneNumber { get; set; } = null!;
         public string Address { get; set; } = null!;
         public double Latitude { get; set; }

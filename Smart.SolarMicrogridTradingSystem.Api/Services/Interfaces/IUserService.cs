@@ -1,3 +1,8 @@
+/*
+ * File: IUserService.cs
+ * Description: Contains the implementation for IUserService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Smart.SolarMicrogridTradingSystem.Api.Models;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Requests;

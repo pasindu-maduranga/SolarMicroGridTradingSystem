@@ -1,3 +1,8 @@
+/*
+ * File: ServiceCollectionExtensions.cs
+ * Description: Contains the implementation for ServiceCollectionExtensions.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Microsoft.Extensions.DependencyInjection;
 using Smart.SolarMicrogridTradingSystem.Api.Services;
 using Smart.SolarMicrogridTradingSystem.Api.Services.Interfaces;
@@ -6,6 +11,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Extensions
 {
     public static class ServiceCollectionExtensions
     {
+        // Executes the AddApplicationServices functionality.
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
             services.AddScoped<IApiResponseFactory, ApiResponseFactory>();

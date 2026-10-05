@@ -1,3 +1,8 @@
+/*
+ * File: ReservationController.cs
+ * Description: Contains the implementation for ReservationController.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Microsoft.AspNetCore.Mvc;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Requests;
@@ -18,12 +23,14 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
         }
 
         [HttpPost]
+        // Executes the Post functionality.
         public async Task<ApiResponse> Post([FromBody] CreateReservationRequest request)
         {
             return await reservationService.CreateReservationAsync(request);
         }
 
         [HttpGet]
+        // Executes the Get functionality.
         public async Task<ApiResponse> Get()
         {
             return await reservationService.GetAllReservationsAsync();
@@ -31,6 +38,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpGet]
         [Route("mine/{nic}")]
+        // Executes the GetMine functionality.
         public async Task<ApiResponse> GetMine(string nic)
         {
             return await reservationService.GetReservationsByProsumerAsync(nic);
@@ -38,6 +46,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpGet]
         [Route("byNode/{nodeId}")]
+        // Executes the GetByNode functionality.
         public async Task<ApiResponse> GetByNode(string nodeId)
         {
             return await reservationService.GetReservationsByNodeAsync(nodeId);
@@ -45,6 +54,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpPost]
         [Route("verify")]
+        // Executes the Verify functionality.
         public async Task<ApiResponse> Verify([FromBody] VerifyReservationRequest request)
         {
             return await reservationService.VerifyReservationAsync(request);
@@ -52,6 +62,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpPut]
         [Route("{id}")]
+        // Executes the Update functionality.
         public async Task<ApiResponse> Update(string id, [FromBody] UpdateReservationRequest request)
         {
             return await reservationService.UpdateReservationAsync(id, request);
@@ -59,6 +70,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpPut]
         [Route("{id}/cancel")]
+        // Executes the Cancel functionality.
         public async Task<ApiResponse> Cancel(string id, [FromBody] CancelReservationRequest request)
         {
             return await reservationService.CancelReservationAsync(id, request);

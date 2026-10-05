@@ -1,3 +1,8 @@
+/*
+ * File: ReservationRequests.cs
+ * Description: Contains the implementation for ReservationRequests.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using System;
 using System.ComponentModel.DataAnnotations;
 

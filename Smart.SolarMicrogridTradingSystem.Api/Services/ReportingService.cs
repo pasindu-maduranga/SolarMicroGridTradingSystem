@@ -1,3 +1,8 @@
+/*
+ * File: ReportingService.cs
+ * Description: Contains the implementation for ReportingService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using MongoDB.Driver;
 using Smart.SolarMicrogridTradingSystem.Api.Models;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
@@ -20,13 +25,14 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             this.responseFactory = responseFactory;
         }
 
+        // Executes the GetUserStatisticsAsync functionality.
         public async Task<ApiResponse> GetUserStatisticsAsync()
         {
             try
             {
                 var totalUsers = await users.CountDocumentsAsync(_ => true);
                 var activeUsers = await users.CountDocumentsAsync(u => u.IsActive);
-                
+
                 return responseFactory.Success(string.Empty, new
                 {
                     TotalUsers = totalUsers,
@@ -40,6 +46,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the GetProsumerStatisticsAsync functionality.
         public async Task<ApiResponse> GetProsumerStatisticsAsync()
         {
             try

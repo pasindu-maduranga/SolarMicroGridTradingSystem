@@ -1,3 +1,8 @@
+/*
+ * File: MenuService.cs
+ * Description: Contains the implementation for MenuService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using MongoDB.Driver;
 using Smart.SolarMicrogridTradingSystem.Api.Models;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
@@ -23,10 +28,13 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             this.responseFactory = responseFactory;
         }
 
+        // Executes the GetAllAsync functionality.
         public async Task<List<Menu>> GetAllAsync() => await menus.Find(_ => true).ToListAsync();
 
+        // Executes the CreateAsync functionality.
         public async Task CreateAsync(Menu menu) => await menus.InsertOneAsync(menu);
 
+        // Executes the GetParentMenuByRoleAsync functionality.
         public async Task<ApiResponse> GetParentMenuByRoleAsync(string roleId)
         {
             try
@@ -53,6 +61,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the GetAllParentMenuDetailsAsync functionality.
         public async Task<ApiResponse> GetAllParentMenuDetailsAsync()
         {
             try
@@ -69,6 +78,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the SaveParentMenuDetailsAsync functionality.
         public async Task<ApiResponse> SaveParentMenuDetailsAsync(ParentMenuRequest request)
         {
             try
@@ -90,6 +100,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the UpdateParentMenuDetailsAsync functionality.
         public async Task<ApiResponse> UpdateParentMenuDetailsAsync(string id, ParentMenuRequest request)
         {
             try
@@ -113,6 +124,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the GetAllMenuDetailsAsync functionality.
         public async Task<ApiResponse> GetAllMenuDetailsAsync()
         {
             try
@@ -136,6 +148,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the SaveMenuDetailsAsync functionality.
         public async Task<ApiResponse> SaveMenuDetailsAsync(MenuRequest request)
         {
             try
@@ -157,6 +170,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the UpdateMenuDetailsAsync functionality.
         public async Task<ApiResponse> UpdateMenuDetailsAsync(string id, MenuRequest request)
         {
             try
@@ -181,6 +195,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the GetAllScreenDetailsAsync functionality.
         public async Task<ApiResponse> GetAllScreenDetailsAsync()
         {
             try
@@ -206,6 +221,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the SaveScreenDetailsAsync functionality.
         public async Task<ApiResponse> SaveScreenDetailsAsync(List<ScreenRequest> requests)
         {
             try
@@ -232,6 +248,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the UpdateScreenDetailsAsync functionality.
         public async Task<ApiResponse> UpdateScreenDetailsAsync(string id, ScreenRequest request)
         {
             try
@@ -258,6 +275,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the DeleteMenuNodeAsync functionality.
         public async Task<ApiResponse> DeleteMenuNodeAsync(string id)
         {
             try
@@ -276,6 +294,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the ToParentMenuSummary functionality.
         private static object ToParentMenuSummary(Menu m) => new
         {
             parentMenuID = m.Id,

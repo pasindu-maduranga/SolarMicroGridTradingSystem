@@ -1,3 +1,8 @@
+/*
+ * File: NodeService.cs
+ * Description: Contains the implementation for NodeService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Smart.SolarMicrogridTradingSystem.Api.Models;
@@ -28,6 +33,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             this.responseFactory = responseFactory;
         }
 
+        // Executes the GetAllNodesAsync functionality.
         public async Task<ApiResponse> GetAllNodesAsync()
         {
             try
@@ -46,6 +52,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the GetNodeByIdAsync functionality.
         public async Task<ApiResponse> GetNodeByIdAsync(string id)
         {
             try
@@ -63,6 +70,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the CreateNodeAsync functionality.
         public async Task<ApiResponse> CreateNodeAsync(NodeRequest request)
         {
             try
@@ -92,6 +100,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the UpdateNodeAsync functionality.
         public async Task<ApiResponse> UpdateNodeAsync(string id, NodeRequest request)
         {
             try
@@ -131,6 +140,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the SetSlotPricesAsync functionality.
         public async Task<ApiResponse> SetSlotPricesAsync(string nodeId, SetSlotPricesRequest request)
         {
             try
@@ -162,6 +172,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the DeleteNodeAsync functionality.
         public async Task<ApiResponse> DeleteNodeAsync(string id)
         {
             try
@@ -182,6 +193,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the GetAvailableGridOperatorsAsync functionality.
         public async Task<ApiResponse> GetAvailableGridOperatorsAsync(string? excludeNodeId)
         {
             try
@@ -216,6 +228,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the AssignGridOperatorAsync functionality.
         public async Task<ApiResponse> AssignGridOperatorAsync(string nodeId, string? operatorUserId)
         {
             try
@@ -269,6 +282,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             return null;
         }
 
+        // Executes the AssignOperatorToNodeAsync functionality.
         private async Task AssignOperatorToNodeAsync(string operatorId, string nodeId)
         {
             var user = await users.Find(x => x.Id == operatorId).FirstOrDefaultAsync();
@@ -285,6 +299,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             return await nodes.Find(x => x.Id == id).FirstOrDefaultAsync();
         }
 
+        // Executes the GenerateSlots functionality.
         private static List<NodeSlot> GenerateSlots(double capacity, int numberOfSlots, double defaultUnitPricePerKwh)
         {
             if (numberOfSlots <= 0)

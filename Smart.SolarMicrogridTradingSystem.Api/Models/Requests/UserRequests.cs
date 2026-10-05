@@ -1,3 +1,8 @@
+/*
+ * File: UserRequests.cs
+ * Description: Contains the implementation for UserRequests.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 namespace Smart.SolarMicrogridTradingSystem.Api.Models.Requests
 {
     public class CreateUserRequest

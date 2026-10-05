@@ -1,3 +1,8 @@
+/*
+ * File: ProsumerController.cs
+ * Description: Contains the implementation for ProsumerController.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +26,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
         }
 
         [HttpGet]
+        // Executes the Get functionality.
         public async Task<ApiResponse> Get()
         {
             return await prosumerService.GetAllProsumersAsync();
@@ -28,6 +34,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpGet]
         [Route("pending")]
+        // Executes the GetPending functionality.
         public async Task<ApiResponse> GetPending()
         {
             return await prosumerService.GetPendingProsumersAsync();
@@ -35,12 +42,14 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpGet]
         [Route("{nic}")]
+        // Executes the GetByNic functionality.
         public async Task<ApiResponse> GetByNic(string nic)
         {
             return await prosumerService.GetProsumerByNicAsync(nic);
         }
 
         [HttpPost]
+        // Executes the Post functionality.
         public async Task<ApiResponse> Post([FromBody] CreateProsumerRequest request)
         {
             return await prosumerService.CreateProsumerAsync(request);
@@ -48,6 +57,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpPut]
         [Route("{nic}")]
+        // Executes the Put functionality.
         public async Task<ApiResponse> Put(string nic, [FromBody] UpdateProsumerRequest request)
         {
             return await prosumerService.UpdateProsumerAsync(nic, request);
@@ -55,6 +65,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpPost]
         [Route("{nic}/photo")]
+        // Executes the UploadPhoto functionality.
         public async Task<ApiResponse> UploadPhoto(string nic, IFormFile file)
         {
             return await prosumerService.UploadProsumerPhotoAsync(nic, file);
@@ -62,6 +73,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpDelete]
         [Route("{nic}")]
+        // Executes the Delete functionality.
         public async Task<ApiResponse> Delete(string nic)
         {
             return await prosumerService.DeleteProsumerAsync(nic);
@@ -69,6 +81,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpPut]
         [Route("{nic}/approve")]
+        // Executes the Approve functionality.
         public async Task<ApiResponse> Approve(string nic, [FromBody] ApproveProsumerRequest request)
         {
             return await prosumerService.ApproveProsumerAsync(nic, request);
@@ -76,6 +89,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpPut]
         [Route("{nic}/reject")]
+        // Executes the Reject functionality.
         public async Task<ApiResponse> Reject(string nic, [FromBody] RejectProsumerRequest request)
         {
             return await prosumerService.RejectProsumerAsync(nic, request);

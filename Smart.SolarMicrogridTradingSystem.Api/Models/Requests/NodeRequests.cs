@@ -1,3 +1,8 @@
+/*
+ * File: NodeRequests.cs
+ * Description: Contains the implementation for NodeRequests.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using System.Collections.Generic;
 
 namespace Smart.SolarMicrogridTradingSystem.Api.Models.Requests

@@ -1,3 +1,8 @@
+/*
+ * File: PasswordHasher.cs
+ * Description: Contains the implementation for PasswordHasher.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using System;
 using System.Security.Cryptography;
 
@@ -9,6 +14,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Utils
         private const int KeySize = 32;
         private const int Iterations = 100000;
 
+        // Executes the Hash functionality.
         public static string Hash(string password)
         {
             var salt = RandomNumberGenerator.GetBytes(SaltSize);
@@ -16,6 +22,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Utils
             return string.Concat(Convert.ToBase64String(salt), ".", Convert.ToBase64String(key));
         }
 
+        // Executes the Verify functionality.
         public static bool Verify(string password, string storedHash)
         {
             var parts = storedHash.Split('.');

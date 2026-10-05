@@ -1,3 +1,8 @@
+/*
+ * File: MenuRequests.cs
+ * Description: Contains the implementation for MenuRequests.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 namespace Smart.SolarMicrogridTradingSystem.Api.Models.Requests
 {
     public class ParentMenuRequest

@@ -1,3 +1,8 @@
+/*
+ * File: ProsumerService.cs
+ * Description: Contains the implementation for ProsumerService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Http;
@@ -28,6 +33,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             this.cloudinary = cloudinary;
         }
 
+        // Executes the GetAllProsumersAsync functionality.
         public async Task<ApiResponse> GetAllProsumersAsync()
         {
             try
@@ -41,6 +47,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the GetPendingProsumersAsync functionality.
         public async Task<ApiResponse> GetPendingProsumersAsync()
         {
             try
@@ -54,6 +61,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the GetProsumerByNicAsync functionality.
         public async Task<ApiResponse> GetProsumerByNicAsync(string nic)
         {
             try
@@ -71,6 +79,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the CreateProsumerAsync functionality.
         public async Task<ApiResponse> CreateProsumerAsync(CreateProsumerRequest request)
         {
             try
@@ -80,7 +89,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
                 {
                     return responseFactory.Error("A prosumer with this NIC already exists.");
                 }
-                
+
                 var existingEmail = await prosumers.Find(x => x.Email == request.Email).FirstOrDefaultAsync();
                 if (existingEmail != null)
                 {
@@ -116,6 +125,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the UpdateProsumerAsync functionality.
         public async Task<ApiResponse> UpdateProsumerAsync(string nic, UpdateProsumerRequest request)
         {
             try
@@ -146,6 +156,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the ApproveProsumerAsync functionality.
         public async Task<ApiResponse> ApproveProsumerAsync(string nic, ApproveProsumerRequest request)
         {
             try
@@ -170,6 +181,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the RejectProsumerAsync functionality.
         public async Task<ApiResponse> RejectProsumerAsync(string nic, RejectProsumerRequest request)
         {
             try
@@ -194,6 +206,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the DeleteProsumerAsync functionality.
         public async Task<ApiResponse> DeleteProsumerAsync(string nic)
         {
             try
@@ -207,6 +220,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the UploadProsumerPhotoAsync functionality.
         public async Task<ApiResponse> UploadProsumerPhotoAsync(string nic, IFormFile file)
         {
             try
@@ -249,6 +263,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the ToSummary functionality.
         private static object ToSummary(Prosumer prosumer) => new
         {
             nic = prosumer.NIC,

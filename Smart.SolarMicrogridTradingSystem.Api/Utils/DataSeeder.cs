@@ -1,3 +1,8 @@
+/*
+ * File: DataSeeder.cs
+ * Description: Contains the implementation for DataSeeder.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using MongoDB.Driver;
 using Smart.SolarMicrogridTradingSystem.Api.Models;
 using Smart.SolarMicrogridTradingSystem.Api.Services.Interfaces;
@@ -6,9 +11,11 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Utils
 {
     public static class DataSeeder
     {
+        // Executes the FindMenu functionality.
         private static Menu FindMenu(List<Menu> menus, string name, int level, string? parentId = null) =>
-            menus.FirstOrDefault(m => m.Level == level && m.Name == name && (parentId == null || m.ParentId == parentId))!;
+                    menus.FirstOrDefault(m => m.Level == level && m.Name == name && (parentId == null || m.ParentId == parentId))!;
 
+        // Executes the SeedAsync functionality.
         public static async Task SeedAsync(IServiceProvider services)
         {
             using var scope = services.CreateScope();
