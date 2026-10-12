@@ -25,7 +25,7 @@ steps:
 
 - script: |
     cd Smart.SolarMicrogridTradingSystem.Web/Web
-    npm ci
+    npm install
     npm run build
   displayName: 'npm build web app'
 
