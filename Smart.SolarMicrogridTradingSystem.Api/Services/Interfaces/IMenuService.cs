@@ -1,3 +1,8 @@
+/*
+ * File: IMenuService.cs
+ * Description: Contains the implementation for IMenuService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Smart.SolarMicrogridTradingSystem.Api.Models;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Requests;
@@ -10,13 +15,16 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services.Interfaces
     {
         Task<List<Menu>> GetAllAsync();
         Task CreateAsync(Menu menu);
-        Task<ApiResponse> GetParentMenuByRoleAsync();
+        Task<ApiResponse> GetParentMenuByRoleAsync(string roleId);
         Task<ApiResponse> GetAllParentMenuDetailsAsync();
         Task<ApiResponse> SaveParentMenuDetailsAsync(ParentMenuRequest request);
+        Task<ApiResponse> UpdateParentMenuDetailsAsync(string id, ParentMenuRequest request);
         Task<ApiResponse> GetAllMenuDetailsAsync();
         Task<ApiResponse> SaveMenuDetailsAsync(MenuRequest request);
+        Task<ApiResponse> UpdateMenuDetailsAsync(string id, MenuRequest request);
         Task<ApiResponse> GetAllScreenDetailsAsync();
         Task<ApiResponse> SaveScreenDetailsAsync(List<ScreenRequest> requests);
+        Task<ApiResponse> UpdateScreenDetailsAsync(string id, ScreenRequest request);
         Task<ApiResponse> DeleteMenuNodeAsync(string id);
     }
 }

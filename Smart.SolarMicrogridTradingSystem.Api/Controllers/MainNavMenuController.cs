@@ -1,3 +1,8 @@
+/*
+ * File: MainNavMenuController.cs
+ * Description: Contains the implementation for MainNavMenuController.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Microsoft.AspNetCore.Mvc;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Services.Interfaces;
@@ -18,6 +23,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpGet]
         [Route("GetMenuModelsByRole")]
+        // Executes the GetMenuModelsByRole functionality.
         public async Task<ApiResponse> GetMenuModelsByRole([FromQuery] string roleID, [FromQuery] string mainMenuID)
         {
             return await mainNavMenuService.GetMenuModelsByRoleAsync(roleID, mainMenuID);

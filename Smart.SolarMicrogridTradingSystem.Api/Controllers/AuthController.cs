@@ -1,3 +1,8 @@
+/*
+ * File: AuthController.cs
+ * Description: Contains the implementation for AuthController.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Microsoft.AspNetCore.Mvc;
 using Smart.SolarMicrogridTradingSystem.Api.Models;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
@@ -19,6 +24,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpPost]
         [Route("login")]
+        // Executes the Login functionality.
         public async Task<ApiResponse> Login([FromBody] LoginDto login)
         {
             return await authService.LoginAsync(login);

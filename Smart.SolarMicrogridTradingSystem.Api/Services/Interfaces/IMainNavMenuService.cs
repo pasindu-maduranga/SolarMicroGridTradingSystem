@@ -1,3 +1,8 @@
+/*
+ * File: IMainNavMenuService.cs
+ * Description: Contains the implementation for IMainNavMenuService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using System.Threading.Tasks;
 

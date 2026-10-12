@@ -1,3 +1,8 @@
+/*
+ * File: RolePermissionRequests.cs
+ * Description: Contains the implementation for RolePermissionRequests.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using System.Collections.Generic;
 
 namespace Smart.SolarMicrogridTradingSystem.Api.Models.Requests

@@ -1,552 +1,202 @@
-import React, { useState, useEffect, Fragment } from 'react';
-import { Button, Box, Grid, CardHeader, CardContent, Card, Divider, Typography, makeStyles, Container } from '@material-ui/core';
-import PageHeader from 'src/views/Common/PageHeader';
-import services from '../Services';
-import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import StarIcon from '@material-ui/icons/Star';
-import { Switch } from '@material-ui/core';
-import { useAlert } from "react-alert";
-import { LoadingComponent } from '../../../../utils/newLoader';
+import React, { useState, useEffect } from 'react';
+import { useAlert } from 'react-alert';
+import { LoadingComponent } from 'src/utils/newLoader';
 import Page from 'src/components/Page';
 import { useNavigate, useParams } from 'react-router-dom';
 import { trackPromise } from 'react-promise-tracker';
-import tokenService from '../../../../utils/tokenDecoder';
-import PerfectScrollbar from 'react-perfect-scrollbar';
+import tokenService from 'src/utils/tokenDecoder';
 import { groupBy } from 'lodash';
+import services from '../Services';
+import roleServices from '../../Role/Services';
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    backgroundColor: theme.palette.background.dark,
-    minHeight: '100%',
-    paddingBottom: theme.spacing(3),
-    paddingTop: theme.spacing(3),
-    width: '100%'
-  },
-  avatar: {
-    marginRight: theme.spacing(2)
-  },
-  modernCard: {
-    borderRadius: 16,
-    boxShadow: '0px 8px 24px rgba(0,0,0,0.06)',
-    border: 'none',
-    padding: theme.spacing(2)
-  },
-  modernHeader: {
-    fontFamily: '"Montserrat", "Inter", sans-serif',
-    fontWeight: 600,
-    fontSize: '1.25rem',
-    color: '#111827'
-  },
-  modernButton: {
-    borderRadius: 8,
-    padding: '8px 24px',
-    textTransform: 'none',
-    fontWeight: 600,
-    boxShadow: '0px 4px 12px rgba(0,0,0,0.08)'
-  },
-  modernExpansion: {
-    boxShadow: '0px 2px 8px rgba(0,0,0,0.04)',
-    borderRadius: '8px !important',
-    marginBottom: '8px',
-    '&:before': {
-      display: 'none',
+const PermCheckbox = ({ checked, disabled, onClick }) => (
+  <button
+    type="button"
+    disabled={disabled}
+    onClick={onClick}
+    className={
+      'inline-flex items-center justify-center w-6 h-6 rounded-md border transition-colors ' +
+      (checked ? 'bg-[#2F6B45] border-[#2F6B45]' : 'bg-white border-[#D8D2BE]') +
+      (disabled ? ' opacity-40 cursor-not-allowed' : ' hover:border-[#2F6B45] cursor-pointer')
     }
-  },
-  modernSwitchLabel: {
-    fontFamily: '"Inter", sans-serif',
-    fontWeight: 500,
-    color: '#111827',
-    marginLeft: '8px'
-  }
-}));
+  >
+    {checked && (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    )}
+  </button>
+);
+
 export default function PermissionListing() {
-  const classes = useStyles();
-  const title = "Change Role Permissions";
-  const buttonName = "Save";
   const [permission, setPermission] = useState([]);
   const [screen, setScreen] = useState([]);
-  const [ModifiedLeftList, setModifiedLeftList] = useState([])
-  const [ModifiedRightList, setModifiedRightList] = useState([])
   const [unmodifiedPermission, setUnmodifiedPermission] = useState([]);
-  const [updatingRoleID, setupdatingRoleID] = useState();
-  const [clearPermission, setClearPermission] = useState({
-    unmodifiedList: unmodifiedPermission,
-    modifiedList: permission
-  });
+  const [updatingRoleID, setUpdatingRoleID] = useState();
+  const [updatingRoleLevelID, setUpdatingRoleLevelID] = useState();
+  const [roleName, setRoleName] = useState('');
   const [isSaveDisable, setIsSaveDisable] = useState(false);
   const [isDataLoad, setDataLoadTrue] = useState(false);
-  const [updatingRoleLevelID, setupUpdatingRoleLevelID] = useState();
 
   const alert = useAlert();
   const params = useParams();
+  const navigate = useNavigate();
 
-  let decryptedRole = 0;
-  let decryptedroleLevelID = 0;
   useEffect(() => {
-    decryptedRole = atob(params.roleID.toString());
-    decryptedroleLevelID = atob(params.roleLevelID.toString());
+    const decryptedRole = atob(params.roleID.toString());
+    const decryptedRoleLevelID = atob(params.roleLevelID.toString());
     if (decryptedRole != 0) {
-
-      setupdatingRoleID(decryptedRole)
-      setupUpdatingRoleLevelID(decryptedroleLevelID)
-
+      setUpdatingRoleID(decryptedRole);
+      setUpdatingRoleLevelID(decryptedRoleLevelID);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
+    if (!updatingRoleID) {
+      return;
+    }
+
     if (tokenService.getRoleLevelFromToken() != 1 && updatingRoleID == tokenService.getRoleIDFromToken()) {
       setIsSaveDisable(true);
-    }
-    else {
+    } else {
       setIsSaveDisable(false);
     }
 
-    trackPromise(
-      getAllPermission()
-    )
+    trackPromise(getAllPermission());
+    roleServices.getRoleDetailsByID(updatingRoleID).then((data) => setRoleName(data?.roleName || ''));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updatingRoleID]);
 
-
   useEffect(() => {
+    if (updatingRoleLevelID === undefined) {
+      return;
+    }
     if (updatingRoleLevelID < tokenService.getRoleLevelFromToken()) {
       setIsSaveDisable(true);
-    }
-    else {
+    } else {
       setIsSaveDisable(false);
     }
   }, [updatingRoleLevelID]);
 
-
-  useEffect(() => {
-    if (permission.length > 0) {
-      sortArrayList(screen)
-    }
-  }, [permission])
-
-  const navigate = useNavigate();
-  const handleClick = () => {
-    navigate('/app/roles/listing');
-  }
-
-  function handlePermissionChange(permissionID, screenID) {
-    var modifiedPermission = [...permission];
-    modifiedPermission.forEach(p => {
-      if (p.permissionID == permissionID) {
-        p.isAssigned = !p.isAssigned
-      }
-    });
-    setPermission(modifiedPermission);
-
-    var count = 0;
-    var trueCount = 0;
-    var updateCount = [...permission];
-    updateCount.forEach(p => {
-      if (p.screenID == screenID) {
-        count++;
-        if (p.isAssigned == true) {
-          trueCount++;
-        }
-      }
-    });
-    setPermission(updateCount);
-
-    var updateScreen = [...screen];
-    updateScreen.forEach(s => {
-      if (s.screenID == screenID) {
-        if (trueCount == count) {
-          s.isOpen = true;
-        } else {
-          s.isOpen = false;
-        }
-      }
-    });
-    setScreen(updateScreen);
-  }
-
-  function handleAllSelectByParentMenuID(menuID) {
-    var updateScreen = [...screen];
-
-    const selectedScreenCount = updateScreen.reduce((counter, obj) => {
-      if (obj.parentMenuID === menuID) counter += 1
-      return counter;
-    }, 0);
-
-    const selectedOpenedScreenCount = updateScreen.reduce((counter, obj) => {
-      if (obj.parentMenuID === menuID && obj.isOpen === true) counter += 1
-      return counter;
-    }, 0);
-
-    updateScreen.forEach(s => {
-      if (s.parentMenuID == menuID) {
-        if (selectedScreenCount === selectedOpenedScreenCount) {
-          s.isOpen = false;
-          s.isParentMenuOpen = false
-        } else {
-          s.isOpen = true;
-          s.isParentMenuOpen = true
-        }
-      }
-    });
-    setScreen(updateScreen);
-    sortArrayList(updateScreen)
-    var checkAllScreen = [...screen];
-    checkAllScreen.forEach(s => {
-      if (s.parentMenuID == menuID) {
-        if (s.isOpen) {
-          var updateCount = [...permission];
-          updateCount.forEach(p => {
-            if (p.screenID == s.screenID) {
-              p.isAssigned = true;
-            }
-          });
-          setPermission(updateCount);
-        } else {
-          var permissionList = [...permission];
-          permissionList.forEach(p => {
-            if (p.screenID == s.screenID) {
-              p.isAssigned = false;
-            }
-          })
-          setPermission(permissionList);
-        }
-      }
-    });
-  }
-
-  function handleScreenChange(screenID) {
-    var updateScreen = [...screen];
-    updateScreen.forEach(s => {
-      if (s.screenID == screenID) {
-        s.isOpen = !s.isOpen;
-      }
-    });
-    setScreen(updateScreen);
-
-    var checkAllScreen = [...screen];
-    checkAllScreen.forEach(s => {
-      if (s.screenID == screenID) {
-        if (s.isOpen) {
-          var updateCount = [...permission];
-          updateCount.forEach(p => {
-            if (p.screenID == screenID) {
-              p.isAssigned = true;
-            }
-          });
-          setPermission(updateCount);
-        } else {
-          var permissionList = [...permission];
-          permissionList.forEach(p => {
-            if (p.screenID == screenID) {
-              p.isAssigned = false;
-            }
-          })
-          setPermission(permissionList);
-        }
-      }
-    });
-  }
-
-  function handleClickCheckboxByParentMenuID(e) {
-    e.stopPropagation();
-  }
-
-  function handleClickCheckbox(e) {
-    e.stopPropagation();
-  }
-
   async function getAllPermission() {
-    var permissionData = await services.getPermissionNameAndScreenNameForCheckbox(tokenService.getRoleIDFromToken(), updatingRoleID);
+    const permissionData = await services.getPermissionNameAndScreenNameForCheckbox(tokenService.getRoleIDFromToken(), updatingRoleID);
 
-    sortArrayList(permissionData.data.screens);
     setScreen(permissionData.data.screens);
     setPermission(permissionData.data.permissions);
     setUnmodifiedPermission(permissionData.data.unmodifiedPermissions);
 
     if (permissionData.data.screens.length > 0) {
-      setDataLoadTrue(true)
+      setDataLoadTrue(true);
     }
   }
 
-  function sortArrayList(data) {
-    if (data.length <= 0) {
-      return;
-    }
+  function handlePermissionChange(permissionID) {
+    setPermission((prev) => prev.map((p) => (p.permissionID === permissionID ? { ...p, isAssigned: !p.isAssigned } : p)));
+  }
 
-    const groupByReferenceNumber = groupBy(data, "parentMenuName");
-    const sortedObjectList = Object.entries(groupByReferenceNumber).map(([key, value]) => ({
-      screenName: key,
-      valueList: value,
-      parentMenuID: value[0].parentMenuID,
-      isParentMenuOpen: (!value.some(e => e.isOpen === false))
-    }));
-
-    var arr = sortedObjectList;
-    arr.sort(function (a, b) {
-      return a.valueList.length - b.valueList.length;
-    });
-
-    let leftArray = [];
-    let tempRightArray = [];
-
-    for (let index = 0; index < arr.length; index++) {
-
-      let tempObject = arr[index]
-
-      if (index % 2) {
-        tempObject['side'] = "left"
-        leftArray.push(tempObject)
-      } else {
-        tempObject['side'] = "right"
-        tempRightArray.push(arr[index])
-      }
-
-    }
-
-    var rightArray = tempRightArray.reverse();
-    setModifiedLeftList(leftArray)
-    setModifiedRightList(rightArray)
+  function handleSelectAllForModule(moduleScreens) {
+    const screenIDs = moduleScreens.map((s) => s.screenID);
+    const relevant = permission.filter((p) => screenIDs.includes(p.screenID));
+    const allOn = relevant.length > 0 && relevant.every((p) => p.isAssigned);
+    setPermission((prev) => prev.map((p) => (screenIDs.includes(p.screenID) ? { ...p, isAssigned: !allOn } : p)));
   }
 
   async function handleSave(e) {
-
     e.preventDefault();
-    setIsSaveDisable(true)
+    setIsSaveDisable(true);
 
-    const response = await services.saveRolePermission(unmodifiedPermission, permission, updatingRoleID)
+    const response = await services.saveRolePermission(unmodifiedPermission, permission, updatingRoleID);
 
     alert.success(response.message);
-    afterSuccessfulyChanged(response.statusCode);
-  }
-
-  function afterSuccessfulyChanged(response) {
-    if (response === "Success") {
-      clearState()
+    if (response.statusCode === 'Success') {
       setTimeout(() => {
         navigate('/app/roles/listing');
-      }, 3000);
+      }, 1500);
     }
   }
 
-  function clearState() {
-    setClearPermission({
-      ...clearPermission,
-      unmodifiedList: null,
-      modifiedList: null,
-      roleID: null
-    });
-  }
-
-  function cardTitle(titleName) {
-    return (
-      <Grid container spacing={1}>
-        <Grid item md={10} xs={12}>
-          <Typography className={classes.modernHeader}>
-            {titleName}
-          </Typography>
-        </Grid>
-        <Grid item md={2} xs={12}>
-          <PageHeader
-            onClick={handleClick}
-          />
-        </Grid>
-      </Grid>
-    )
-  }
+  const groupedModules = groupBy(screen, (s) => s.parentMenuName || 'General');
 
   return (
-    <Fragment>
+    <Page title="Role Permissions" className="min-h-full bg-[#F5F4EF] pt-7 pb-7 px-4 lg:px-8">
       <LoadingComponent />
-      <Page className={classes.root} title={title}>
-        <Container maxWidth={false}>
-          <Box mt={0}>
-            <Card className={classes.modernCard}>
-              <CardHeader
-                title={cardTitle("Role Permission")}
-              />
-              <PerfectScrollbar>
-                <Divider />
-                <CardContent>
-                  <form onSubmit={(e) => handleSave(e)}>
-                    <div>
-                      <div >
 
-                        <Grid container spacing={1}>
-                          <Grid item md={6} xs={12}>
-                            <Grid container spacing={1}>
-                              {
-                                ModifiedLeftList.map((s, index) => (
-                                  <Grid item md={12} xs={12}>
-                                    <ExpansionPanel className={classes.modernExpansion}>
-                                      <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-                                        <Typography className={classes.heading} >
-                                          <Switch
-                                            color="primary"
-                                            onChange={() => handleAllSelectByParentMenuID(s.parentMenuID)}
-                                            checked={s.isParentMenuOpen}
-                                            onClick={e => handleClickCheckboxByParentMenuID(e)}
-                                          />
-                                          <label className={classes.modernSwitchLabel}>{s.screenName === undefined || s.screenName === "null" || s.screenName === isNaN ? "COMMON" : s.screenName}</label>
-                                        </Typography>
-                                      </ExpansionPanelSummary>
-                                      <ExpansionPanelDetails>
-                                        <Grid item md={12} xs={12}>
-                                          {
-                                            s.valueList.map(s => {
-                                              return (
-                                                <ExpansionPanel className={classes.modernExpansion}>
-                                                  <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-                                                    <Typography className={classes.heading} >
-                                                      <Switch
-                                                        color="primary"
-                                                        onChange={() => handleScreenChange(s.screenID)}
-                                                        checked={s.isOpen}
-                                                        disabled={s.screenName === 'Role Permission'}
-                                                        onClick={e => handleClickCheckbox(e)}
-                                                      />
-                                                      <label className={classes.modernSwitchLabel}>{s.screenName === undefined || s.screenName === "null" || s.screenName === isNaN ? "" : s.screenName}</label>
-                                                    </Typography>
-                                                  </ExpansionPanelSummary>
-                                                  <ExpansionPanelDetails>
-                                                    <Typography>
-                                                      {permission.map(p => {
-                                                        if (p.screenID == s.screenID) {
-                                                          return (
-                                                            <Fragment>
-                                                              <ListItem button className={classes.nested}>
-                                                                <ListItemIcon>
-                                                                  <StarIcon />
-                                                                </ListItemIcon>
-                                                                <ListItemText primary={p.permissionName} />
-                                                                <Switch
-                                                                  color="primary"
-                                                                  checked={p.isAssigned}
-                                                                  disabled={s.screenName === 'Role Permission'}
-                                                                  label={p.permissionName}
-                                                                  onChange={() => handlePermissionChange(p.permissionID, p.screenID)}
-                                                                />
-                                                              </ListItem>
-                                                            </Fragment>
-                                                          );
-                                                        }
-                                                      })}
-                                                    </Typography>
-                                                  </ExpansionPanelDetails>
-                                                </ExpansionPanel>
-                                              );
-                                            })
-                                          }
-                                        </Grid>
-                                      </ExpansionPanelDetails>
-                                    </ExpansionPanel>
-                                  </Grid>
-                                ))
-                              }
-                            </Grid>
-                          </Grid>
-                          <Grid item md={6} xs={12}>
-                            <Grid container spacing={1}>
-                              {
-                                ModifiedRightList.map((s, index) => (
-                                  <Grid item md={12} xs={12}>
-                                    <ExpansionPanel className={classes.modernExpansion}>
-                                      <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-                                        <Typography className={classes.heading} >
-                                          <Switch
-                                            color="primary"
-                                            onChange={() => handleAllSelectByParentMenuID(s.parentMenuID)}
-                                            checked={s.isParentMenuOpen}
-                                            onClick={e => handleClickCheckboxByParentMenuID(e)}
-                                          />
-                                          <label className={classes.modernSwitchLabel}>{s.screenName === undefined || s.screenName === "null" || s.screenName === isNaN ? "COMMON" : s.screenName}</label>
-                                        </Typography>
-                                      </ExpansionPanelSummary>
-                                      <ExpansionPanelDetails>
-                                        <Grid item md={12} xs={12}>
-                                          {
-                                            s.valueList.map(s => {
-                                              return (
-                                                <ExpansionPanel className={classes.modernExpansion}>
-                                                  <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-                                                    <Typography className={classes.heading} >
-                                                      <Switch
-                                                        color="primary"
-                                                        onChange={() => handleScreenChange(s.screenID)}
-                                                        checked={s.isOpen}
-                                                        disabled={s.screenName === 'Role Permission'}
-                                                        onClick={e => handleClickCheckbox(e)}
-                                                      />
-                                                      <label className={classes.modernSwitchLabel}>{s.screenName === undefined || s.screenName === "null" || s.screenName === isNaN ? "" : s.screenName}</label>
-                                                    </Typography>
-                                                  </ExpansionPanelSummary>
-                                                  <ExpansionPanelDetails>
-                                                    <Typography>
-                                                      {permission.map(p => {
-                                                        if (p.screenID == s.screenID) {
-                                                          return (
-                                                            <Fragment>
-                                                              <ListItem button className={classes.nested}>
-                                                                <ListItemIcon>
-                                                                  <StarIcon />
-                                                                </ListItemIcon>
-                                                                <ListItemText primary={p.permissionName} />
-                                                                <Switch
-                                                                  color="primary"
-                                                                  checked={p.isAssigned}
-                                                                  disabled={s.screenName === 'Role Permission'}
-                                                                  label={p.permissionName}
-                                                                  onChange={() => handlePermissionChange(p.permissionID, p.screenID)}
-                                                                />
-                                                              </ListItem>
-                                                            </Fragment>
-                                                          );
-                                                        }
-                                                      })}
-                                                    </Typography>
-                                                  </ExpansionPanelDetails>
-                                                </ExpansionPanel>
-                                              );
-                                            })
-                                          }
-                                        </Grid>
-                                      </ExpansionPanelDetails>
-                                    </ExpansionPanel>
-                                  </Grid>
-                                ))
-                              }
-                            </Grid>
-                          </Grid>
-                        </Grid>
+      <button
+        type="button"
+        onClick={() => navigate('/app/roles/listing')}
+        className="flex items-center gap-1.5 text-sm font-semibold text-[#5C3D0E] mb-4 hover:underline"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+        All roles
+      </button>
+
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
+        <div>
+          <h1 className="font-sans text-lg font-bold text-[#22201A] m-0">Role Permissions</h1>
+          <p className="text-sm text-[#726A58] mt-1">
+            {roleName ? `Control which screens and actions ${roleName} can access.` : 'Control which screens and actions this role can access.'}
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSave}>
+        {Object.entries(groupedModules).map(([moduleName, moduleScreens]) => {
+          const screenIDs = moduleScreens.map((s) => s.screenID);
+          const relevant = permission.filter((p) => screenIDs.includes(p.screenID));
+          const moduleAllOn = relevant.length > 0 && relevant.every((p) => p.isAssigned);
+
+          return (
+            <div key={moduleName} className="bg-white border border-[#E6DDC4] rounded-2xl overflow-hidden mb-4">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[#FAFAF8] border-b border-[#E6DDC4]">
+                    <th className="text-left px-5 py-3">
+                      <div className="flex items-center gap-2.5 font-sans font-bold text-[#22201A]">
+                        <PermCheckbox checked={moduleAllOn} onClick={() => handleSelectAllForModule(moduleScreens)} />
+                        <span>{moduleName}</span>
                       </div>
-                    </div>
-                    <Box display="flex" justifyContent="flex-end" p={2}>
-                      {isDataLoad ? (
-                        <Button
-                          className={classes.modernButton}
-                          style={{ backgroundColor: '#111827', color: '#FFF' }}
-                          type="submit"
-                          variant="contained"
-                          disabled={isSaveDisable}
-                        >
-                          {buttonName}
-                        </Button>
-                      ) : null}
-                    </Box>
-                  </form>
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#726A58] w-28">View</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#726A58] w-28">Add &amp; Edit</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#726A58] w-28">Delete</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {moduleScreens.map((s) => (
+                    <tr key={s.screenID} className="border-b border-[#F0EDE0] last:border-0 hover:bg-[#FAFAF8]">
+                      <td className="px-5 py-3 text-[#403A2E]">{s.screenName}</td>
+                      {permission
+                        .filter((p) => p.screenID === s.screenID)
+                        .map((p) => (
+                          <td key={p.permissionID} className="px-4 py-3 text-center">
+                            <PermCheckbox
+                              checked={p.isAssigned}
+                              disabled={s.screenName === 'Role Permission'}
+                              onClick={() => handlePermissionChange(p.permissionID)}
+                            />
+                          </td>
+                        ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })}
 
-
-                </CardContent>
-              </PerfectScrollbar>
-            </Card>
-          </Box>
-        </Container>
-      </Page>
-    </Fragment>
-
+        {isDataLoad && (
+          <div className="flex justify-end mt-2">
+            <button
+              type="submit"
+              disabled={isSaveDisable}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#2F6B45] text-white text-sm font-semibold hover:bg-[#265939] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Save
+            </button>
+          </div>
+        )}
+      </form>
+    </Page>
   );
-};
+}

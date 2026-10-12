@@ -1,54 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Box, makeStyles } from '@material-ui/core';
 import tokenService from '../../../utils/tokenDecoder';
-import EventOutlinedIcon from '@material-ui/icons/EventOutlined';
-
-const useStyles = makeStyles((theme) => ({
-  heroContainer: {
-    position: 'relative',
-    width: `calc(100% + ${theme.spacing(6)}px)`,
-    height: 320,
-    marginTop: theme.spacing(-3), // Pull up to negate container padding
-    marginLeft: theme.spacing(-3), // Pull left to negate container padding
-    marginRight: theme.spacing(-3), // Pull right to negate container padding
-    backgroundImage: props => props.gradient,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'flex-start',
-    padding: theme.spacing(6, 8),
-    boxSizing: 'border-box',
-    transition: 'background-image 1s ease-in-out'
-  },
-  datePill: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    padding: '6px 12px',
-    borderRadius: 8,
-    color: '#E5E7EB',
-    marginBottom: theme.spacing(2),
-    width: 'fit-content',
-    backdropFilter: 'blur(4px)'
-  },
-  greeting: {
-    fontFamily: '"Inter", sans-serif',
-    fontWeight: 700,
-    fontSize: '3rem',
-    color: '#ffffff',
-    letterSpacing: '-1px',
-    marginBottom: theme.spacing(2)
-  },
-  subtitle: {
-    fontFamily: '"Inter", sans-serif',
-    fontSize: '1.05rem',
-    fontWeight: 400,
-    color: '#E5E7EB',
-    maxWidth: 600,
-    lineHeight: 1.5
-  }
-}));
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -58,66 +9,60 @@ const getGreeting = () => {
   return 'Good night';
 };
 
-const getTimeOfDayGradient = () => {
+const getTimeOfDayBackground = () => {
   const hour = new Date().getHours();
-  
-  // Morning (5am - 12pm): beautiful blue sky transitioning to a warm sunrise tone
+
   if (hour >= 5 && hour < 12) {
     return 'linear-gradient(90deg, rgba(41, 128, 185, 0.8) 0%, rgba(241, 196, 15, 0.6) 100%), url("/static/images/morning_bg.png")';
   }
-  // Afternoon (12pm - 17pm): clear blue sky mixed with agricultural green
   if (hour >= 12 && hour < 17) {
     return 'linear-gradient(90deg, rgba(21, 101, 192, 0.8) 0%, rgba(46, 204, 113, 0.7) 100%), url("/static/images/noon_bg.png")';
   }
-  // Evening (17pm - 20pm): sunset, twilight purples and oranges
   if (hour >= 17 && hour < 20) {
     return 'linear-gradient(90deg, rgba(142, 68, 173, 0.8) 0%, rgba(230, 126, 34, 0.6) 100%), url("/static/images/evening_bg.png")';
   }
-  // Night (20pm - 5am): deep dark starry night sky, black/dark blue
   return 'linear-gradient(90deg, rgba(10, 15, 36, 0.85) 0%, rgba(27, 38, 79, 0.8) 100%), url("/static/images/night_bg.png")';
 };
 
 const GreetingHero = () => {
-  const [gradient, setGradient] = useState('');
+  const [background, setBackground] = useState('');
   const [greeting, setGreeting] = useState('');
   const [dateStr, setDateStr] = useState('');
   const [userName, setUserName] = useState('admin');
 
-  // Pass dynamic gradient to makeStyles
-  const classes = useStyles({ gradient });
-
   useEffect(() => {
     setGreeting(getGreeting());
-    setGradient(getTimeOfDayGradient());
-    
+    setBackground(getTimeOfDayBackground());
+
     try {
       const name = tokenService.getUserNameFromToken();
       if (name) setUserName(name.toLowerCase());
     } catch (err) {
       console.log('Error decoding token', err);
     }
-    
+
     const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
     setDateStr(new Date().toLocaleDateString('en-US', options));
   }, []);
 
   return (
-    <Box className={classes.heroContainer}>
-      <Box className={classes.datePill}>
-        <EventOutlinedIcon style={{ fontSize: 18, marginRight: 8, opacity: 0.8 }} />
-        <Typography style={{ fontSize: '0.85rem', fontFamily: '"Inter", sans-serif', fontWeight: 500 }}>
-          {dateStr}
-        </Typography>
-      </Box>
+    <div
+      className="relative w-full h-[320px] flex flex-col justify-center px-8 lg:px-16 py-12 box-border transition-[background-image] duration-1000 ease-in-out rounded-[20px]"
+      style={{ backgroundImage: background, backgroundSize: 'cover', backgroundPosition: 'center' }}
+    >
+      <div className="inline-flex items-center bg-white/15 backdrop-blur-sm text-[#E5E7EB] px-3 py-1.5 rounded-lg w-fit mb-4">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 opacity-80"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+        <span className="text-sm font-medium font-sans">{dateStr}</span>
+      </div>
 
-      <Typography variant="h1" className={classes.greeting}>
+      <h1 className="font-sans font-bold text-white text-[3rem] leading-none tracking-[-1px] mb-4">
         {greeting}, {userName}
-      </Typography>
+      </h1>
 
-      <Typography className={classes.subtitle}>
-        Here's what's happening across your farm today. All systems are running smoothly with 2 alerts that need your attention.
-      </Typography>
-    </Box>
+      <p className="font-sans text-[1.05rem] text-[#E5E7EB] max-w-[600px] leading-relaxed">
+        Here's what's happening across your microgrid today. All nodes are reporting normally, with 2 items that need your review.
+      </p>
+    </div>
   );
 };
 

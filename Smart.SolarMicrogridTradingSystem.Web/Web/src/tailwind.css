@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Preflight is disabled (to avoid colliding with Material-UI elsewhere in the
+   app during the Tailwind migration), so native <button> chrome isn't reset
+   by default. Scope just the button reset here for anything built with
+   Tailwind, without touching other elements MUI still relies on. */
+.tw-scope button {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}

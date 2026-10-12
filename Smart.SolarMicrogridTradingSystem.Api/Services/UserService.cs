@@ -1,3 +1,8 @@
+/*
+ * File: UserService.cs
+ * Description: Contains the implementation for UserService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using MongoDB.Driver;
 using Smart.SolarMicrogridTradingSystem.Api.Models;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
@@ -24,8 +29,10 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
         public async Task<User?> GetByUsernameAsync(string username) =>
             await users.Find(x => x.UserName == username).FirstOrDefaultAsync();
 
+        // Executes the CreateAsync functionality.
         public async Task CreateAsync(User user) => await users.InsertOneAsync(user);
 
+        // Executes the GetAllUsersAsync functionality.
         public async Task<ApiResponse> GetAllUsersAsync()
         {
             try
@@ -39,6 +46,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the GetUserByIdAsync functionality.
         public async Task<ApiResponse> GetUserByIdAsync(string id)
         {
             try
@@ -56,6 +64,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the CreateUserAsync functionality.
         public async Task<ApiResponse> CreateUserAsync(CreateUserRequest request)
         {
             try
@@ -94,6 +103,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the UpdateUserAsync functionality.
         public async Task<ApiResponse> UpdateUserAsync(string id, UpdateUserRequest request)
         {
             try
@@ -127,6 +137,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the ResetPasswordAsync functionality.
         public async Task<ApiResponse> ResetPasswordAsync(string id, ResetPasswordRequest request)
         {
             try
@@ -150,6 +161,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the ChangePasswordAsync functionality.
         public async Task<ApiResponse> ChangePasswordAsync(ChangePasswordRequest request)
         {
             try
@@ -172,6 +184,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the DeleteUserAsync functionality.
         public async Task<ApiResponse> DeleteUserAsync(string id)
         {
             try
@@ -185,6 +198,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the ToSummary functionality.
         private static object ToSummary(User user) => new
         {
             userID = user.Id,

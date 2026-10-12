@@ -1,12 +1,16 @@
-import { CommonGet, CommonPost } from '../../../helpers/HttpClient';
+import { CommonGet, CommonPost, CommonPut, CommonDelete } from '../../../helpers/HttpClient';
 
 export default {
   GetAllParentMenuDetails,
   SaveParentMenuDetails,
+  UpdateParentMenuDetails,
   GetAllMenuDetails,
   SaveMenuDetails,
+  UpdateMenuDetails,
   GetAllScreenDetails,
-  SaveScreenDetails
+  SaveScreenDetails,
+  UpdateScreenDetails,
+  DeleteMenuNode
 };
 
 async function GetAllParentMenuDetails() {
@@ -16,6 +20,11 @@ async function GetAllParentMenuDetails() {
 
 async function SaveParentMenuDetails(requestModel) {
   const response = await CommonPost('/api/ParentMainMenu/SaveParentMenuDetails', null, requestModel)
+  return response;
+}
+
+async function UpdateParentMenuDetails(id, requestModel) {
+  const response = await CommonPut('/api/ParentMainMenu/UpdateParentMenuDetails/' + id, null, requestModel)
   return response;
 }
 
@@ -29,6 +38,11 @@ async function SaveMenuDetails(requestModel) {
   return response;
 }
 
+async function UpdateMenuDetails(id, requestModel) {
+  const response = await CommonPut('/api/Menu/UpdateMenuDetails/' + id, null, requestModel)
+  return response;
+}
+
 async function GetAllScreenDetails() {
   const response = await CommonGet('/api/Menu/GetAllScreenDetails', null)
   return response;
@@ -36,5 +50,15 @@ async function GetAllScreenDetails() {
 
 async function SaveScreenDetails(requestModel) {
   const response = await CommonPost('/api/Menu/SaveScreenDetails', null, requestModel)
+  return response;
+}
+
+async function UpdateScreenDetails(id, requestModel) {
+  const response = await CommonPut('/api/Menu/UpdateScreenDetails/' + id, null, requestModel)
+  return response;
+}
+
+async function DeleteMenuNode(id) {
+  const response = await CommonDelete('/api/Menu/' + id)
   return response;
 }

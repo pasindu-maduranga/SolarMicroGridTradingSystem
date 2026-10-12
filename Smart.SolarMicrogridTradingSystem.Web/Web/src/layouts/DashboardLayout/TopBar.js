@@ -1,173 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import clsx from 'clsx';
-import PropTypes from 'prop-types';
-import {
-  AppBar,
-  Badge,
-  Box,
-  Hidden,
-  IconButton,
-  Toolbar,
-  Button,
-  makeStyles,
-  Avatar,
-  Typography,
-  withStyles,
-  Tooltip,
-  Grid
-} from '@material-ui/core';
-import MenuIcon from '@material-ui/icons/Menu';
-import NotificationsIcon from '@material-ui/icons/NotificationsOutlined';
-import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
-import Brightness4OutlinedIcon from '@material-ui/icons/Brightness4Outlined';
-import SearchIcon from '@material-ui/icons/Search';
-import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import { Menu, Transition } from '@headlessui/react';
 import Logo from 'src/components/Logo';
-import Popover from '@material-ui/core/Popover';
-import InputBase from '@material-ui/core/InputBase';
 import tokenService from '../../utils/tokenDecoder';
-import { Offline, Online, Detector } from "react-detect-offline"
-import WifiIcon from '@material-ui/icons/Wifi';
-import RssFeedIcon from '@material-ui/icons/RssFeed';
-import sessionStorageReadWrite from 'src/utils/sessionStorageReadWrite'
-import { AlertDialog } from 'src/views/Common/AlertDialog';
-import webConfigurationRead from 'src/utils/webConfigurationRead';
+import sessionStorageReadWrite from 'src/utils/sessionStorageReadWrite';
+import { useSidebar } from './SidebarContext';
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    backgroundColor: '#ffffff',
-    boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
-    height: 70,
-    display: 'flex',
-    justifyContent: 'center',
-    zIndex: theme.zIndex.drawer + 1
-  },
-  searchBar: {
-    display: 'flex',
-    alignItems: 'center',
-    background: '#F3F4F6',
-    borderRadius: 24,
-    border: 'none',
-    padding: '6px 16px',
-    width: 400,
-    color: '#4B5563',
-    margin: '0 auto',
-  },
-  searchInput: {
-    color: '#111827',
-    flex: 1,
-    marginLeft: 8,
-    fontSize: '0.9rem',
-    fontFamily: '"Inter", sans-serif',
-    '&::placeholder': {
-      color: '#9CA3AF'
-    }
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginRight: 12
-  },
-  avatar: {
-    width: 42,
-    height: 42,
-    border: '2px solid rgba(0, 0, 0, 0.1)',
-  },
-  onlineBadge: {
-    backgroundColor: '#4caf50',
-    width: 10,
-    height: 10,
-    borderRadius: '50%',
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    border: '2px solid #1b5e20'
-  },
-  userInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    marginRight: 25,
-  },
-  nameText: {
-    fontWeight: 600,
-    color: '#111827',
-    fontSize: '0.95rem',
-    lineHeight: 1.2
-  },
-  jobBadge: {
-    background: '#f3f4f6',
-    color: '#111827',
-    fontSize: '0.65rem',
-    fontWeight: 600,
-    padding: '2px 8px',
-    borderRadius: 10,
-    marginTop: 2
-  },
-  iconButton: {
-    marginLeft: 8,
-    color: '#6b7280',
-    transition: 'all 0.2s',
-    '&:hover': {
-      backgroundColor: 'rgba(0, 0, 0, 0.04)',
-      color: '#111827',
-      transform: 'scale(1.05)'
-    }
-  }
-}));
+const IconButton = ({ children, ...rest }) => (
+  <button
+    type="button"
+    className="w-10 h-10 rounded-lg flex items-center justify-center text-[#726A58] hover:bg-[#F4F1E8] hover:text-[#22201A] transition-colors"
+    {...rest}
+  >
+    {children}
+  </button>
+);
 
-const TopBar = ({
-  className,
-  onMobileNavOpen,
-  ...rest
-}) => {
-  const classes = useStyles();
-  const [notifications] = useState([]);
-
-  const [userName, setUserName] = useState()
-  const [roleName, setRoleName] = useState()
-  const [message, setMessage] = useState('Logout Confirmation AgriGEN');
-  const [EnableConfirmMessage, setEnableConfirmMessage] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [confirmPopUp, setconfirmPopUp] = useState();
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const open = Boolean(anchorEl);
-  const id = open ? 'simple-popover' : undefined;
-  const [ConnectionCheckConfiguration, setConnectionCheckConfiguration] = useState({
-    isEnabled: true,
-    interval: 5000,
-    timeout: 5000
-  })
+const TopBar = () => {
   const navigate = useNavigate();
-
-  const logout = async (values) => {
-    ClearAllSessionStorageItems();
-    window.location.href = '/signin';
-  };
-
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handlePasswordChange = (event) => {
-    let encryptedUserID = btoa(tokenService.getUserIDFromToken().toString())
-    navigate("/app/users/changeUserPassword/" + encryptedUserID)
-    setAnchorEl(false);
-  }
+  const { openMobile } = useSidebar();
+  const [userName, setUserName] = useState();
+  const [roleName, setRoleName] = useState();
 
   useEffect(() => {
-    setUserName(tokenService.getUserNameFromToken())
-    setRoleName(tokenService.getRoleNameFromToken())
+    setUserName(tokenService.getUserNameFromToken());
+    setRoleName(tokenService.getRoleNameFromToken());
   }, []);
-
-  const user = {
-    //avatar: '/static/images/not_found.png',
-    jobTitle: roleName,
-    name: userName
-  };
 
   function ClearAllSessionStorageItems() {
     sessionStorageReadWrite.removeTokenFromSession();
@@ -176,153 +34,103 @@ const TopBar = ({
     sessionStorageReadWrite.removeLastSelectedScreenIDFromSession();
   }
 
-  function confirmData(y) {
-    if (y) {
-      logout(confirmPopUp);
-    }
-  }
+  const logout = () => {
+    ClearAllSessionStorageItems();
+    window.location.href = '/signin';
+  };
 
-  async function confirmMessage(data) {
-    setIsLoading(true);
-    setEnableConfirmMessage(true);
-    setconfirmPopUp(data);
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
-  }
+  const handlePasswordChange = () => {
+    let encryptedUserID = btoa(tokenService.getUserIDFromToken().toString());
+    navigate('/app/users/changeUserPassword/' + encryptedUserID);
+  };
 
-  useEffect(() => {
-    GetConnectionCheckConfigDetails()
-  }, [])
-
-
-  async function GetConnectionCheckConfigDetails() {
-    const response = await webConfigurationRead.ReadConnectionCheckConfig();
-    if (response != null && response != undefined) {
-      setConnectionCheckConfiguration(response);
-    }
-  }
+  const initial = (userName || 'A').charAt(0).toUpperCase();
 
   return (
-    <AppBar
-      className={clsx(classes.root, className)}
-      elevation={0}
-      {...rest}
-    >
-      <Toolbar>
+    <div className="tw-scope fixed top-0 left-0 right-0 h-[70px] z-30 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex items-center px-4 lg:px-6 gap-4">
+      <button
+        type="button"
+        onClick={openMobile}
+        aria-label="Open menu"
+        className="lg:hidden w-10 h-10 flex items-center justify-center text-[#22201A]"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
 
-        <Hidden mdDown>
-          <RouterLink to="/">
-            <Logo />
-          </RouterLink>
-          <Box flexGrow={1} />
-          <Box className={classes.searchBar}>
-            <SearchIcon style={{ color: '#9CA3AF' }} />
-            <InputBase
-              placeholder="Search crops, livestock, staff..."
-              className={classes.searchInput}
-            />
-          </Box>
-          <Box flexGrow={1} />
+      <RouterLink to="/">
+        <Logo />
+      </RouterLink>
 
-          {/* Icons Section */}
-          <Box display="flex" alignItems="center" mr={2}>
-            <IconButton className={classes.iconButton}>
-              <Brightness4OutlinedIcon />
-            </IconButton>
-            
-            <IconButton className={classes.iconButton}>
-              <Badge badgeContent={3} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
+      <div className="flex-1" />
 
-            <IconButton className={classes.iconButton}>
-              <SettingsOutlinedIcon />
-            </IconButton>
+      <div className="hidden lg:flex items-center gap-2.5 bg-[#F4F1E8] rounded-full px-4 py-2 w-[400px] max-w-[40%]">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+          <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Search nodes, prosumers, reservations…"
+          aria-label="Search"
+          className="bg-transparent border-none outline-none text-sm text-[#111827] placeholder:text-[#9CA3AF] w-full font-sans"
+        />
+      </div>
 
-            <Tooltip title="Sign out">
-              <IconButton className={classes.iconButton} onClick={logout}>
-                <ExitToAppIcon />
-              </IconButton>
-            </Tooltip>
-          </Box>
+      <div className="flex-1" />
 
-          {/* User Info Section */}
-          <Box display="flex" alignItems="center" style={{ borderLeft: '1px solid #E5E7EB', paddingLeft: 16 }}>
-            <Box className={classes.avatarContainer}>
-              <Avatar
-                className={classes.avatar}
-                src={user.avatar}
-                style={{ cursor: 'pointer', backgroundColor: '#E8F0E6', color: '#54784D', fontWeight: 600 }}
-                onClick={handleClick}
-              >A</Avatar>
-              <Box className={classes.onlineBadge} style={{ backgroundColor: '#22C55E', border: '2px solid #fff' }} />
-            </Box>
-
-            <Box className={classes.userInfo} style={{ marginRight: 0 }}>
-              <Typography className={classes.nameText}>
-                {user.name}
-              </Typography>
-              <Box className={classes.jobBadge} style={{ padding: 0, background: 'transparent' }}>
-                {user.jobTitle}
-              </Box>
-            </Box>
-
-            <Popover
-              id={id}
-              open={open}
-              anchorEl={anchorEl}
-              onClose={handleClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-            >
-              <Button color="primary" onClick={handlePasswordChange}>Change Password</Button>
-            </Popover>
-          </Box>
-        </Hidden>
-      <Hidden lgUp>
-        <IconButton
-          color="primary"
-          onClick={onMobileNavOpen} >
-          <MenuIcon />
+      <div className="hidden lg:flex items-center gap-1">
+        <IconButton aria-label="Notifications">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
         </IconButton>
-        <RouterLink to="/">
-          <Logo />
-        </RouterLink>
-        <Box flexGrow={1} />
-        <Box className={classes.userInfo}>
-          <Typography className={classes.nameText}>
-            {user.name}
-          </Typography>
-        </Box>
-        <Box display="flex" alignItems="center">
-          <Avatar
-            className={classes.avatar}
-            component={RouterLink}
-            src={user.avatar}
-            to="/app/account"
-          />
-        </Box>
-        <IconButton className={classes.iconButton} onClick={logout}>
-          <ExitToAppIcon />
+        <IconButton aria-label="Settings">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
         </IconButton>
+      </div>
 
-      </Hidden>
-    </Toolbar>
-    </AppBar>
+      <Menu as="div" className="relative flex items-center gap-2.5 pl-3 lg:border-l border-[#E5E7EB]">
+        <Menu.Button className="flex items-center gap-2.5 outline-none">
+          <span className="w-10 h-10 rounded-full bg-[#E8F0E6] text-[#54784D] font-bold flex items-center justify-center border-2 border-black/5">
+            {initial}
+          </span>
+          <span className="hidden md:flex flex-col items-start leading-tight">
+            <span className="text-sm font-semibold text-[#111827]">{userName}</span>
+            <span className="text-[11px] text-[#6B7280]">{roleName}</span>
+          </span>
+        </Menu.Button>
+        <Transition
+          as={Fragment}
+          enter="transition ease-out duration-100" enterFrom="transform opacity-0 scale-95" enterTo="transform opacity-100 scale-100"
+          leave="transition ease-in duration-75" leaveFrom="transform opacity-100 scale-100" leaveTo="transform opacity-0 scale-95"
+        >
+          <Menu.Items className="absolute right-0 top-14 w-52 bg-white rounded-xl shadow-[0_16px_40px_-16px_rgba(23,60,38,.25)] border border-[#E6DDC4] py-1.5 z-40 focus:outline-none">
+            <Menu.Item>
+              {({ active }) => (
+                <button
+                  type="button"
+                  onClick={handlePasswordChange}
+                  className={`w-full text-left px-4 py-2.5 text-sm text-[#22201A] ${active ? 'bg-[#F4F1E8]' : ''}`}
+                >
+                  Change Password
+                </button>
+              )}
+            </Menu.Item>
+            <Menu.Item>
+              {({ active }) => (
+                <button
+                  type="button"
+                  onClick={logout}
+                  className={`w-full text-left px-4 py-2.5 text-sm text-[#C0392B] ${active ? 'bg-[#FBE9E7]' : ''}`}
+                >
+                  Sign out
+                </button>
+              )}
+            </Menu.Item>
+          </Menu.Items>
+        </Transition>
+      </Menu>
+    </div>
   );
-};
-
-TopBar.propTypes = {
-  className: PropTypes.string,
-  onMobileNavOpen: PropTypes.func
 };
 
 export default TopBar;

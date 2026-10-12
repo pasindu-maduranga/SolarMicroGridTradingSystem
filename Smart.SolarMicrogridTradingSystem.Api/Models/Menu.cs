@@ -1,3 +1,8 @@
+/*
+ * File: Menu.cs
+ * Description: Contains the implementation for Menu.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 

@@ -1,3 +1,8 @@
+/*
+ * File: PermissionController.cs
+ * Description: Contains the implementation for PermissionController.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Microsoft.AspNetCore.Mvc;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Services.Interfaces;
@@ -18,6 +23,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpGet]
         [Route("GetPermissionsByRoleAndScreen")]
+        // Executes the GetPermissionsByRoleAndScreen functionality.
         public async Task<ApiResponse> GetPermissionsByRoleAndScreen([FromQuery] string roleID, [FromQuery] string screenCode)
         {
             return await permissionService.GetPermissionsByRoleAndScreenAsync(roleID, screenCode);

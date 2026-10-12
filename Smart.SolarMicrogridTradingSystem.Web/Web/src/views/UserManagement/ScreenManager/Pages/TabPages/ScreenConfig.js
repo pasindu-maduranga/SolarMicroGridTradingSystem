@@ -42,6 +42,7 @@ export function ScreenConfig() {
     routePath: ""
   });
   const [screenDetailsList, setScreenDetailsList] = useState([]);
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
     trackPromise(getAllMenuDetails());
@@ -79,7 +80,55 @@ export function ScreenConfig() {
       routePath: screenFormData.routePath
     };
 
+    if (editingId) {
+      let requestModel = {
+        menuId: model.menuID,
+        screenCode: model.screenCode,
+        screenName: model.screenName,
+        screenOrderNo: model.screenOrderNo,
+        iconTag: model.iconTag,
+        routePath: model.routePath
+      };
+      let response = await Services.UpdateScreenDetails(editingId, requestModel);
+      if (response.statusCode === "Success") {
+        alert.success(response.message);
+        cancelEdit();
+        trackPromise(getAllScreenDetails());
+      } else {
+        alert.error(response.message);
+      }
+      return;
+    }
+
     setScreenDetailsList(result => [...result, model]);
+  }
+
+  function handleEdit(rowData) {
+    setEditingId(rowData.screenID);
+    setScreenFormData({
+      menuID: rowData.menuID,
+      screenCode: rowData.screenCode,
+      screenName: rowData.screenName,
+      screenOrderNo: rowData.screenOrderNo,
+      iconTag: rowData.iconTag || "",
+      routePath: rowData.routePath
+    });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setScreenFormData({ menuID: 0, screenCode: "", screenName: "", screenOrderNo: 0, iconTag: "", routePath: "" });
+  }
+
+  async function handleDelete(rowData) {
+    if (!window.confirm(`Remove screen "${rowData.screenName}"?`)) return;
+    let response = await Services.DeleteMenuNode(rowData.screenID);
+    if (response.statusCode === "Success") {
+      alert.success(response.message);
+      trackPromise(getAllScreenDetails());
+    } else {
+      alert.error(response.message);
+    }
   }
 
   async function getAllMenuDetails() {
@@ -232,14 +281,23 @@ export function ScreenConfig() {
                     </Grid>
                   </Grid>
                 </CardContent>
-                <Box display="flex" justifyContent="flex-end" p={2}>
+                <Box display="flex" justifyContent="flex-end" p={2} style={{ gap: 8 }}>
+                  {editingId && (
+                    <Button
+                      variant="outlined"
+                      onClick={cancelEdit}
+                      size='small'
+                    >
+                      Cancel
+                    </Button>
+                  )}
                   <Button
                     color="primary"
                     variant="outlined"
                     onClick={() => trackPromise(addScreenDetails())}
                     size='small'
                   >
-                    Add
+                    {editingId ? 'Update Screen' : 'Add'}
                   </Button>
                 </Box>
 
@@ -294,8 +352,21 @@ export function ScreenConfig() {
                       exportButton: false,
                       headerStyle: { textAlign: "left" },
                       cellStyle: { textAlign: "left" },
-                      columnResizable: false
+                      columnResizable: false,
+                      actionsColumnIndex: -1
                     }}
+                    actions={[
+                      {
+                        icon: 'edit',
+                        tooltip: 'Edit',
+                        onClick: (event, rowData) => handleEdit(rowData)
+                      },
+                      {
+                        icon: 'delete',
+                        tooltip: 'Delete',
+                        onClick: (event, rowData) => trackPromise(handleDelete(rowData))
+                      }
+                    ]}
                   />
                 </Box>
               </PerfectScrollbar>

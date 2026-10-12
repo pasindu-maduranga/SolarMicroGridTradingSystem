@@ -12,6 +12,9 @@
 *.userosscache
 *.sln.docstates
 
+## Publish profiles (machine-specific local publish paths)
+**/Properties/PublishProfiles/*.pubxml
+
 ## Test results
 [Tt]est[Rr]esult*/
 
@@ -29,3 +32,6 @@ node_modules/
 ## OS files
 .DS_Store
 Thumbs.db
+
+## IDE (IntelliJ / Android Studio)
+.idea/

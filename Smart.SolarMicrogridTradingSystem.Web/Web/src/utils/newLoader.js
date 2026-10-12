@@ -4,7 +4,6 @@ import 'react-responsive-modal/styles.css';
 import { Modal } from 'react-responsive-modal';
 import { ClassicSpinner,RotateSpinner,MetroSpinner } from "react-spinners-kit";
 import { Grid } from '@material-ui/core';
-//import RotateSpinner  from '@material-ui/core/RotateSpinner ';
 
 export const LoadingComponent = (props) => {
   const { promiseInProgress } = usePromiseTracker();

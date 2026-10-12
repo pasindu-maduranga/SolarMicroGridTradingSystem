@@ -1,3 +1,8 @@
+/*
+ * File: RoleService.cs
+ * Description: Contains the implementation for RoleService.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using MongoDB.Driver;
 using Smart.SolarMicrogridTradingSystem.Api.Models;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
@@ -20,12 +25,15 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             this.responseFactory = responseFactory;
         }
 
+        // Executes the GetAllAsync functionality.
         public async Task<List<Role>> GetAllAsync() => await roles.Find(_ => true).ToListAsync();
 
         public async Task<Role?> GetByIdAsync(string id) => await roles.Find(x => x.Id == id).FirstOrDefaultAsync();
 
+        // Executes the CreateAsync functionality.
         public async Task CreateAsync(Role role) => await roles.InsertOneAsync(role);
 
+        // Executes the GetAllRolesAsync functionality.
         public async Task<ApiResponse> GetAllRolesAsync()
         {
             try
@@ -39,6 +47,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the GetRoleByIdAsync functionality.
         public async Task<ApiResponse> GetRoleByIdAsync(string id)
         {
             try
@@ -56,6 +65,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the CreateRoleAsync functionality.
         public async Task<ApiResponse> CreateRoleAsync(RoleRequest request)
         {
             try
@@ -77,6 +87,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the UpdateRoleAsync functionality.
         public async Task<ApiResponse> UpdateRoleAsync(string id, RoleRequest request)
         {
             try
@@ -102,6 +113,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the DeleteRoleAsync functionality.
         public async Task<ApiResponse> DeleteRoleAsync(string id)
         {
             try
@@ -115,6 +127,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Services
             }
         }
 
+        // Executes the ToSummary functionality.
         private static object ToSummary(Role role) => new
         {
             roleID = role.Id,

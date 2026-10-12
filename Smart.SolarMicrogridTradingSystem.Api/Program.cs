@@ -1,3 +1,9 @@
+/*
+ * File: Program.cs
+ * Description: Contains the implementation for Program.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
+using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
@@ -15,6 +21,14 @@ builder.Services.AddSingleton<IMongoClient>(s =>
     new MongoClient(mongoSettings.GetValue<string>("ConnectionString")));
 builder.Services.AddScoped(s =>
     s.GetService<IMongoClient>()!.GetDatabase(mongoSettings.GetValue<string>("DatabaseName")));
+
+var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings");
+builder.Services.AddSingleton(s => new Cloudinary(new Account(
+    cloudinarySettings.GetValue<string>("CloudName"),
+    cloudinarySettings.GetValue<string>("ApiKey"),
+    cloudinarySettings.GetValue<string>("ApiSecret")
+))
+{ Api = { Secure = true } });
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = Encoding.ASCII.GetBytes(jwtSettings.GetValue<string>("Secret")!);
@@ -64,5 +78,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 await Smart.SolarMicrogridTradingSystem.Api.Utils.DataSeeder.SeedAsync(app.Services);
+await Smart.SolarMicrogridTradingSystem.Api.Utils.DataSeeder.SeedProsumerAndReservationFeaturesAsync(app.Services);
 
 app.Run();

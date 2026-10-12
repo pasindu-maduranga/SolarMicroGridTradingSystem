@@ -80,7 +80,7 @@ export default function RoleListing() {
     var isAuthorized = permissions.find(p => p.permissionCode == 'VIEWROLE');
 
     if (isAuthorized === undefined) {
-      navigate('/app/unauthorized');
+      navigate('/unauthorized');
     }
   }
 

@@ -17,7 +17,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "Agrithmics.AgriXPay.Api": {
+    "Smart.SolarMicrogridTradingSystem.Api": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "swagger",

@@ -1,3 +1,8 @@
+/*
+ * File: RolePermissionController.cs
+ * Description: Contains the implementation for RolePermissionController.
+ * Author: Smart Solar Microgrid Trading System Team
+ */
 using Microsoft.AspNetCore.Mvc;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Common;
 using Smart.SolarMicrogridTradingSystem.Api.Models.Requests;
@@ -19,6 +24,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpGet]
         [Route("GetPermissionByRoleId")]
+        // Executes the GetPermissionByRoleId functionality.
         public async Task<ApiResponse> GetPermissionByRoleId([FromQuery] string loggedRoleID, [FromQuery] string assigningRoleID)
         {
             return await rolePermissionService.GetPermissionByRoleIdAsync(loggedRoleID, assigningRoleID);
@@ -26,6 +32,7 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Controllers
 
         [HttpPost]
         [Route("SaveRolePermission")]
+        // Executes the SaveRolePermission functionality.
         public async Task<ApiResponse> SaveRolePermission([FromBody] SaveRolePermissionRequest request)
         {
             return await rolePermissionService.SaveRolePermissionAsync(request);

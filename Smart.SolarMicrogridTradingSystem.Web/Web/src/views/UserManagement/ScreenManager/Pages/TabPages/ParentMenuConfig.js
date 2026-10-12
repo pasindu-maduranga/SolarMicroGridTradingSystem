@@ -32,6 +32,7 @@ export function ParentMenuConfig() {
   const alert = useAlert();
 
   const [parentMenuList, setParentMenuList] = useState([]);
+  const [editingId, setEditingId] = useState(null);
   const [parentMenuFormData, setParentMenuFormData] = useState({
     parentMenuName: "",
     iconTagName: "",
@@ -55,10 +56,38 @@ export function ParentMenuConfig() {
       iconTag: parentMenuFormData.iconTagName.toLocaleLowerCase(),
       menuOrderNo: parentMenuFormData.menuOrderNumber
     };
-    let response = await services.SaveParentMenuDetails(requestModel);
+    let response = editingId
+      ? await services.UpdateParentMenuDetails(editingId, requestModel)
+      : await services.SaveParentMenuDetails(requestModel);
     if (response.statusCode === "Success") {
       alert.success(response.message);
       setParentMenuFormData({ parentMenuName: "", iconTagName: "", menuOrderNumber: 0 });
+      setEditingId(null);
+      trackPromise(getAllParentMenus());
+    } else {
+      alert.error(response.message);
+    }
+  }
+
+  function handleEdit(rowData) {
+    setEditingId(rowData.parentMenuID);
+    setParentMenuFormData({
+      parentMenuName: rowData.parentMenuName,
+      iconTagName: rowData.iconTag,
+      menuOrderNumber: rowData.menuOrderNo
+    });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setParentMenuFormData({ parentMenuName: "", iconTagName: "", menuOrderNumber: 0 });
+  }
+
+  async function handleDelete(rowData) {
+    if (!window.confirm(`Remove parent menu "${rowData.parentMenuName}"?`)) return;
+    let response = await services.DeleteMenuNode(rowData.parentMenuID);
+    if (response.statusCode === "Success") {
+      alert.success(response.message);
       trackPromise(getAllParentMenus());
     } else {
       alert.error(response.message);
@@ -148,14 +177,23 @@ export function ParentMenuConfig() {
                     </Grid>
                   </Grid>
                 </CardContent>
-                <Box display="flex" justifyContent="flex-end" p={2}>
+                <Box display="flex" justifyContent="flex-end" p={2} style={{ gap: 8 }}>
+                  {editingId && (
+                    <Button
+                      variant="outlined"
+                      onClick={cancelEdit}
+                      size='small'
+                    >
+                      Cancel
+                    </Button>
+                  )}
                   <Button
                     color="primary"
                     variant="outlined"
                     onClick={() => trackPromise(saveParentMenuDetails())}
                     size='small'
                   >
-                    Save Parent Menu
+                    {editingId ? 'Update Parent Menu' : 'Save Parent Menu'}
                   </Button>
                 </Box>
 
@@ -172,8 +210,21 @@ export function ParentMenuConfig() {
                       exportButton: false,
                       headerStyle: { textAlign: "left" },
                       cellStyle: { textAlign: "left" },
-                      columnResizable: false
+                      columnResizable: false,
+                      actionsColumnIndex: -1
                     }}
+                    actions={[
+                      {
+                        icon: 'edit',
+                        tooltip: 'Edit',
+                        onClick: (event, rowData) => handleEdit(rowData)
+                      },
+                      {
+                        icon: 'delete',
+                        tooltip: 'Delete',
+                        onClick: (event, rowData) => trackPromise(handleDelete(rowData))
+                      }
+                    ]}
                   />
                 </Box>
               </PerfectScrollbar>
