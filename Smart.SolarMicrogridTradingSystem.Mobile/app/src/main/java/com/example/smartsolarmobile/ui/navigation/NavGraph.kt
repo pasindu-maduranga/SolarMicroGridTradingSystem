@@ -17,6 +17,7 @@ import com.example.smartsolarmobile.ui.auth.SignupViewModel
 import com.example.smartsolarmobile.ui.auth.SignupViewModelFactory
 import com.example.smartsolarmobile.ui.home.GridOperatorHomeScreen
 import com.example.smartsolarmobile.ui.home.ProsumerHomeScreen
+import com.example.smartsolarmobile.ui.prosumer.ReserveSlotScreen
 
 @Composable
 fun AppNavGraph(
@@ -98,11 +99,22 @@ fun AppNavGraph(
                         authRepository.logout()
                         activeSession = null
                         currentScreen = Screen.Login
-                    }
+                    },
+                    onNavigateToReserve = { currentScreen = Screen.ReserveSlot },
+                    onNavigateToHistory = {}
                 )
             } ?: run {
                 currentScreen = Screen.Login
             }
         }
+
+        Screen.ReserveSlot -> {
+            ReserveSlotScreen(
+                onBack = { currentScreen = Screen.ProsumerHome },
+                onConfirm = { currentScreen = Screen.ProsumerHome }
+            )
+        }
+
+        else -> {}
     }
 }

@@ -31,13 +31,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.foundation.clickable
 import com.example.smartsolarmobile.data.api.models.UserSession
 import com.example.smartsolarmobile.ui.components.PrimaryButton
 
 @Composable
 fun ProsumerHomeScreen(
     session: UserSession,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onNavigateToReserve: () -> Unit,
+    onNavigateToHistory: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -96,39 +103,63 @@ fun ProsumerHomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Prosumer Card
-            Card(
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(modifier = Modifier.padding(18.dp)) {
-                    Text(
-                        text = "Solar Generation & Trading",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Ready to Trade Surplus Energy",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Text(
-                        text = "Identity: Prosumer Account Verified",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            "Approved upcoming",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            "2",
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                }
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            "Pending",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            "1",
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    }
                 }
             }
-
+            Spacer(modifier = Modifier.height(20.dp))
+            Box(
+                modifier = Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Map placeholder", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "Account & Node Identity",
+                text = "Upcoming booking",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -142,45 +173,91 @@ fun ProsumerHomeScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Badge,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(32.dp)
+                Row(
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.EnergySavingsLeaf,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
+                        Text(
+                            "Riverside Station",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp
                         )
-                        Column(modifier = Modifier.padding(start = 12.dp)) {
-                            Text("Registered NIC Identity", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                            Text("NIC: ${session.nic ?: session.username}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
+                        Text(
+                            "Sep 30, 10:00 – 10:30",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.EnergySavingsLeaf,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(32.dp)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            "Approved",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
-                        Column(modifier = Modifier.padding(start = 12.dp)) {
-                            Text("Peer-to-Peer Trading Access", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                            Text("You are authenticated to sell surplus energy into the local microgrid.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
                     }
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            PrimaryButton(text = "Reserve a slot", onClick = onNavigateToReserve)
+
             Spacer(modifier = Modifier.weight(1f))
 
-            PrimaryButton(
-                text = "Sign Out",
-                onClick = onLogout,
-                containerColor = MaterialTheme.colorScheme.errorContainer,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = "Home",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text("Home", fontSize = 11.sp)
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.clickable { onNavigateToHistory() }) {
+                    Icon(
+                        imageVector = Icons.Default.List,
+                        contentDescription = "Bookings",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text("Bookings", fontSize = 11.sp)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text("Search", fontSize = 11.sp)
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.clickable { onLogout() }) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Profile",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text("Profile", fontSize = 11.sp)
+                }
+            }
         }
     }
 }
