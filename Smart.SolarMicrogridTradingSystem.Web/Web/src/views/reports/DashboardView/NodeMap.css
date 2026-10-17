@@ -1,0 +1,83 @@
+/* Dashboard "Microgrid Nodes" map - marker and hover-card styling. */
+
+.sg-node-marker {
+  background: transparent;
+  border: none;
+}
+
+.sg-node-pin {
+  position: relative;
+  width: 34px;
+  height: 34px;
+}
+
+.sg-node-pin__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  opacity: 0.55;
+  animation: sg-node-ring 2.4s ease-out infinite;
+}
+
+.sg-node-pin__dot {
+  position: absolute;
+  inset: 5px;
+  border-radius: 9999px;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 12px rgba(34, 32, 26, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease;
+}
+
+.sg-node-marker:hover .sg-node-pin__dot,
+.sg-node-pin--selected .sg-node-pin__dot {
+  transform: scale(1.18);
+}
+
+.sg-node-pin--inactive .sg-node-pin__ring {
+  animation: none;
+  opacity: 0;
+}
+
+@keyframes sg-node-ring {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+/* Hover card - replaces Leaflet's default tooltip chrome */
+.leaflet-tooltip.sg-node-tip {
+  padding: 0;
+  border: 1px solid #e6ddc4;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 40px -12px rgba(23, 60, 38, 0.35);
+  font-family: 'IBM Plex Sans', Roboto, sans-serif;
+  color: #22201a;
+  white-space: normal;
+}
+
+.leaflet-tooltip.sg-node-tip::before {
+  border-top-color: #ffffff;
+}
+
+/* Soften the OpenStreetMap tiles a little so the node pins stand out. */
+.sg-node-map .leaflet-tile-pane {
+  filter: saturate(0.7) brightness(1.04);
+}
+
+.sg-node-map .leaflet-control-attribution {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.sg-node-map .leaflet-control-zoom a {
+  color: #2f6b45;
+}
