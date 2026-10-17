@@ -18,17 +18,9 @@ steps:
 
 - publish: $(Build.ArtifactStagingDirectory)/api
   artifact: api
-- task: NodeTool@0
-  inputs:
-    versionSpec: '18.x'
-  displayName: 'Install Node.js'
 
-- script: |
-    cd Smart.SolarMicrogridTradingSystem.Web/Web
-    npm install
-    npm run build
-  displayName: 'npm build web app'
+- script: dotnet publish Smart.SolarMicrogridTradingSystem.Web/Smart.SolarMicrogridTradingSystem.Web.csproj --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/web
+  displayName: 'dotnet publish Web'
 
-- publish: Smart.SolarMicrogridTradingSystem.Web/Web/build
+- publish: $(Build.ArtifactStagingDirectory)/web
   artifact: web
-
