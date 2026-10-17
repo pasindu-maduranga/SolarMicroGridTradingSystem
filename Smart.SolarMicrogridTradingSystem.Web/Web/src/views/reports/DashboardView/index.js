@@ -4,6 +4,10 @@ import GreetingHero from './GreetingHero';
 import DashboardStatCard from './DashboardStatCard';
 import userService from 'src/views/UserManagement/User/Services';
 import nodeService from 'src/views/MicrogridNodeManagement/Services';
+import reportingService from 'src/views/Reporting/Services';
+import EnergyGenerationPanel from './EnergyGenerationPanel';
+import NodeMapPanel from './NodeMapPanel';
+import RecentActivityPanel from './RecentActivityPanel';
 
 const icon = (path, color) => (
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -25,14 +29,51 @@ const EmptyPanel = ({ title, iconPath, message, hint }) => (
   </div>
 );
 
+const ENERGY_REFRESH_MS = 60 * 1000;
+
 const Dashboard = () => {
   const [totalStaff, setTotalStaff] = useState(null);
   const [activeNodes, setActiveNodes] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [energy, setEnergy] = useState(null);
+  const [energyUpdatedAt, setEnergyUpdatedAt] = useState(null);
 
   useEffect(() => {
     getTotalStaff();
     getActiveNodes();
+    getDashboardSummary();
+
+    // Only the Energy Generation chart refreshes itself; the tiles keep their page-load values.
+    const timer = setInterval(refreshEnergy, ENERGY_REFRESH_MS);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Registered Prosumers / Today's Reservations / Pending Approvals tiles + Energy Generation chart.
+  async function getDashboardSummary() {
+    try {
+      const data = await reportingService.getDashboardSummary(14);
+      setSummary(data);
+      setEnergy(data.energy);
+      setEnergyUpdatedAt(new Date());
+    } catch (e) {
+      setSummary(false);
+      setEnergy(false);
+    }
+  }
+
+  // A failed refresh keeps the last chart on screen rather than blanking it.
+  async function refreshEnergy() {
+    try {
+      const data = await reportingService.getDashboardSummary(14);
+      setEnergy(data.energy);
+      setEnergyUpdatedAt(new Date());
+    } catch (e) {
+      setEnergy((current) => current || false);
+    }
+  }
+
+  const summaryValue = (key) => (summary ? summary[key] : '—');
 
   async function getTotalStaff() {
     const users = await userService.getAllUsers();
@@ -65,43 +106,49 @@ const Dashboard = () => {
         <DashboardStatCard
           icon={icon(<><path d="M3 11l9-7 9 7" /><path d="M5 10v9h14v-9" /></>, '#B7791F')}
           iconBg="#FEF3C7"
-          value="—"
+          live={!!summary}
+          value={summaryValue('registeredProsumers')}
           label="Registered Prosumers"
-          sublabel="Coming soon"
+          sublabel={summary === false ? 'Unavailable' : 'Loading…'}
         />
         <DashboardStatCard
           icon={icon(<><rect x="3" y="4" width="18" height="17" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="16" y1="2" x2="16" y2="6" /></>, '#6D4FC7')}
           iconBg="#EDE9FE"
-          value="—"
+          live={!!summary}
+          value={summaryValue('todaysReservations')}
           label="Today's Reservations"
-          sublabel="Coming soon"
+          sublabel={summary === false ? 'Unavailable' : 'Loading…'}
         />
         <DashboardStatCard
           icon={icon(<><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>, '#C0392B')}
           iconBg="#FCE7E7"
-          value="—"
+          live={!!summary}
+          value={summaryValue('pendingApprovals')}
           label="Pending Approvals"
-          sublabel="Coming soon"
+          sublabel={summary === false ? 'Unavailable' : 'Loading…'}
         />
       </div>
 
       <div className="flex flex-col lg:flex-row gap-[22px] mt-[22px]">
         <div className="flex-[1.4]">
-          <EmptyPanel
-            title="Energy Generation"
-            iconPath={<><path d="M3 3v18h18" /><path d="M7 15l4-5 3 3 5-7" /></>}
-            message="No generation data yet"
-            hint="Connect your first Microgrid Node to see live output here."
-          />
+          {energy === false ? (
+            <EmptyPanel
+              title="Energy Generation"
+              iconPath={<><path d="M3 3v18h18" /><path d="M7 15l4-5 3 3 5-7" /></>}
+              message="Energy data is unavailable"
+              hint="The dashboard summary could not be loaded. Check that the API is running."
+            />
+          ) : (
+            <EnergyGenerationPanel energy={energy} updatedAt={energyUpdatedAt} />
+          )}
         </div>
         <div className="flex-1">
-          <EmptyPanel
-            title="Recent Activity"
-            iconPath={<path d="M22 12h-4l-3 9L9 3l-3 9H2" />}
-            message="Nothing to show yet"
-            hint="Activity from Nodes and Reservations will appear here once those modules go live."
-          />
+          <RecentActivityPanel />
         </div>
+      </div>
+
+      <div className="mt-[22px]">
+        <NodeMapPanel />
       </div>
     </Page>
   );

@@ -152,6 +152,21 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Utils
             var reservationsMenu = await EnsureMenu("Reservations", "event_available", 1, reservationsParent.Id!);
             var reservationsScreen = await EnsureScreen("Reservations", "RESERVATIONS", "event_available", 1, reservationsMenu.Id!, "/app/reservations/listing");
 
+            // --- Web: Reports (Trading / Node / Reservation / Admin) ---
+            var reportsParent = await EnsureParentMenu("Reports", "assessment", 12);
+            var tradingReportsMenu = await EnsureMenu("Trading Reports", "payments", 1, reportsParent.Id!);
+            await EnsureScreen("Energy Trading Summary", "RPTTRADINGSUMMARY", "insights", 1, tradingReportsMenu.Id!, "/app/reports/tradingSummary");
+            await EnsureScreen("Prosumer Earnings", "RPTPROSUMEREARNINGS", "account_balance_wallet", 2, tradingReportsMenu.Id!, "/app/reports/prosumerEarnings");
+            var nodeReportsMenu = await EnsureMenu("Node Reports", "hub", 2, reportsParent.Id!);
+            await EnsureScreen("Node Performance", "RPTNODEPERFORMANCE", "leaderboard", 1, nodeReportsMenu.Id!, "/app/reports/nodePerformance");
+            await EnsureScreen("Slot Utilization", "RPTSLOTUTILIZATION", "battery_charging_full", 2, nodeReportsMenu.Id!, "/app/reports/slotUtilization");
+            await EnsureScreen("Delivered vs Booked", "RPTDELIVEREDVSBOOKED", "compare_arrows", 3, nodeReportsMenu.Id!, "/app/reports/deliveredVsBooked");
+            var reservationReportsMenu = await EnsureMenu("Reservation Reports", "event_note", 3, reportsParent.Id!);
+            await EnsureScreen("Reservation Status", "RPTRESERVATIONSTATUS", "donut_large", 1, reservationReportsMenu.Id!, "/app/reports/reservationStatus");
+            var adminReportsMenu = await EnsureMenu("Admin Reports", "admin_panel_settings", 4, reportsParent.Id!);
+            await EnsureScreen("Grid Operator Activity", "RPTOPERATORACTIVITY", "engineering", 1, adminReportsMenu.Id!, "/app/reports/operatorActivity");
+            await EnsureScreen("Prosumer Registrations", "RPTPROSUMERREGISTRATION", "how_to_reg", 2, adminReportsMenu.Id!, "/app/reports/prosumerRegistrations");
+
             // --- Mobile: Prosumer Portal (Prosumer-only) ---
             var prosumerPortalParent = await EnsureParentMenu("Prosumer Portal", "solar_power", 100);
             var reserveMenu = await EnsureMenu("Reserve Energy", "ev_station", 1, prosumerPortalParent.Id!);
@@ -198,14 +213,16 @@ namespace Smart.SolarMicrogridTradingSystem.Api.Utils
             if (superAdminRole != null)
             {
                 await GrantFullAccess(superAdminRole.Id!, prosumerProfilesMenu.Id!, prosumerApprovalsMenu.Id!, reservationsMenu.Id!);
+                await GrantReadOnly(superAdminRole.Id!, tradingReportsMenu.Id!, nodeReportsMenu.Id!, reservationReportsMenu.Id!, adminReportsMenu.Id!);
             }
             if (backofficeRole != null)
             {
                 await GrantFullAccess(backofficeRole.Id!, prosumerProfilesMenu.Id!, prosumerApprovalsMenu.Id!, reservationsMenu.Id!);
+                await GrantReadOnly(backofficeRole.Id!, tradingReportsMenu.Id!, nodeReportsMenu.Id!, reservationReportsMenu.Id!, adminReportsMenu.Id!);
             }
             if (gridOperatorRole != null)
             {
-                await GrantReadOnly(gridOperatorRole.Id!, reservationsMenu.Id!);
+                await GrantReadOnly(gridOperatorRole.Id!, reservationsMenu.Id!, nodeReportsMenu.Id!, reservationReportsMenu.Id!);
                 await GrantFullAccess(gridOperatorRole.Id!, verifyMenu.Id!, mySlotsMenu.Id!, operatorBookingsMenu.Id!, transactionHistoryMenu.Id!);
             }
             await GrantFullAccess(prosumerRole.Id!, reserveMenu.Id!, myReservationsMenu.Id!, earningsMenu.Id!);

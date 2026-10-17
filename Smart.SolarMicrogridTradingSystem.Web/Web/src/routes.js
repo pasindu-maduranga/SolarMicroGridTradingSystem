@@ -26,6 +26,14 @@ import ProsumerListing from 'src/views/ProsumerManagement/Pages/Listing';
 import ProsumerAddEdit from 'src/views/ProsumerManagement/Pages/AddEdit';
 import ReservationsListing from 'src/views/Reservations/Pages/Listing';
 import ReservationAddEdit from 'src/views/Reservations/Pages/AddEdit';
+import TradingSummaryReport from 'src/views/Reporting/Pages/TradingSummary';
+import ProsumerEarningsReport from 'src/views/Reporting/Pages/ProsumerEarnings';
+import NodePerformanceReport from 'src/views/Reporting/Pages/NodePerformance';
+import SlotUtilizationReport from 'src/views/Reporting/Pages/SlotUtilization';
+import DeliveredVsBookedReport from 'src/views/Reporting/Pages/DeliveredVsBooked';
+import ReservationStatusReport from 'src/views/Reporting/Pages/ReservationStatus';
+import OperatorActivityReport from 'src/views/Reporting/Pages/OperatorActivity';
+import ProsumerRegistrationsReport from 'src/views/Reporting/Pages/ProsumerRegistrations';
 import Unauthorized from './utils/unauthorized';
 
 const routes = (isLoggedIn) => [
@@ -88,6 +96,19 @@ const routes = (isLoggedIn) => [
         children: [
           { path: 'listing', element: <ReservationsListing /> },
           { path: 'addEdit/:reservationID', element: <ReservationAddEdit /> }
+        ]
+      },
+      {
+        path: 'reports',
+        children: [
+          { path: 'tradingSummary', element: <TradingSummaryReport /> },
+          { path: 'prosumerEarnings', element: <ProsumerEarningsReport /> },
+          { path: 'nodePerformance', element: <NodePerformanceReport /> },
+          { path: 'slotUtilization', element: <SlotUtilizationReport /> },
+          { path: 'deliveredVsBooked', element: <DeliveredVsBookedReport /> },
+          { path: 'reservationStatus', element: <ReservationStatusReport /> },
+          { path: 'operatorActivity', element: <OperatorActivityReport /> },
+          { path: 'prosumerRegistrations', element: <ProsumerRegistrationsReport /> }
         ]
       }
     ]
