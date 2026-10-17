@@ -21,6 +21,8 @@ steps:
 
 - script: dotnet publish Smart.SolarMicrogridTradingSystem.Web/Smart.SolarMicrogridTradingSystem.Web.csproj --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/web
   displayName: 'dotnet publish Web'
+  env:
+    CI: false
 
 - publish: $(Build.ArtifactStagingDirectory)/web
   artifact: web
